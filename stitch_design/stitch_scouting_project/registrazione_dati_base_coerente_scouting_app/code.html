@@ -1,0 +1,342 @@
+<!DOCTYPE html><html lang="it"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Registrazione - AGESCI Bari 10</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#af101a",
+                        "on-primary": "#ffffff",
+                        "surface": "#fff8f7",
+                        "on-surface": "#271816",
+                        "surface-variant": "#f9dcd9",
+                        "on-surface-variant": "#5b403d",
+                        "outline": "#8f6f6c",
+                        "outline-variant": "#e4beba",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed": "#ffdad6",
+                        "on-primary-fixed": "#410003",
+                        "inverse-surface": "#3e2c2a",
+                        "inverse-on-surface": "#ffedeb",
+                    },
+                    "fontFamily": {
+                        "sans": ["Poppins", "sans-serif"],
+                        "body-lg": ["Poppins"],
+                        "headline-md": ["Poppins"],
+                        "display-lg": ["Poppins"],
+                        "body-md": ["Poppins"],
+                        "label-md": ["Poppins"],
+                        "title-lg": ["Poppins"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["45px", { "lineHeight": "52px", "fontWeight": "700" }],
+                        "headline-md": ["28px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "500" }],
+                        "title-lg": ["22px", { "lineHeight": "28px", "fontWeight": "500" }]
+                    },
+                    "spacing": {
+                        "section-gap": "24px",
+                        "container-margin": "16px",
+                        "touch-target": "48px"
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+<style data-stitch-cursor="">*{cursor:crosshair!important}[contenteditable="true"]:focus,.cursor-text:focus{cursor:text!important}</style><style data-stitch-scroll-lock="">html,body{overflow:hidden!important}</style></head>
+<body class="bg-surface text-on-surface font-body-lg min-h-screen flex flex-col items-center justify-center p-container-margin md:p-section-gap dark:bg-inverse-surface dark:text-inverse-on-surface">
+<!-- Header -->
+<header class="w-full max-w-lg mb-section-gap flex flex-col items-center">
+<div class="items-center gap-3 mb-4 text-primary dark:text-primary-fixed">
+<h1 class="font-display-lg text-display-lg font-bold text-center w-full text-primary dark:text-primary-fixed">AGESCI Bari 10</h1>
+</div>
+<h2 class="font-headline-md text-headline-md text-on-surface text-center dark:text-inverse-on-surface">Registrazione</h2>
+<p class="font-body-md text-body-md text-on-surface-variant text-center mt-2 dark:text-surface-variant">Dati del socio da registrare</p>
+</header>
+<main class="w-full max-w-lg bg-surface-container-lowest dark:bg-inverse-surface rounded-xl shadow-md p-section-gap border dark:border-outline">
+<!-- Info Alert -->
+<div class="bg-blue-50 dark:bg-blue-900/30 flex items-start gap-3 p-4 rounded-xl mb-8 border border-blue-100 dark:border-blue-800">
+<span class="material-symbols-outlined text-blue-600 dark:text-blue-400 mt-0.5">info</span>
+<div>
+<h3 class="text-sm font-bold text-blue-800 dark:text-blue-300 mb-1">Importante</h3>
+<p class="text-xs text-blue-700 dark:text-blue-200/80 leading-relaxed">
+                    La tua registrazione è soggetta all'approvazione di un Capo. Riceverai un'email di conferma una volta che il tuo account sarà stato validato.
+                </p>
+</div>
+</div>
+<form class="space-y-6">
+<!-- Step Indicator -->
+<div class="flex justify-between items-center mb-8 px-4">
+<div class="flex flex-col items-center">
+<div class="w-8 h-8 rounded-full bg-primary text-on-primary dark:bg-primary-fixed dark:text-on-primary-fixed flex items-center justify-center font-bold text-sm mb-1">1</div>
+<span class="font-label-md text-label-md text-primary dark:text-primary-fixed">Dati Base</span>
+</div>
+<div class="flex-1 h-0.5 bg-surface-variant dark:bg-outline-variant mx-2"></div>
+<div class="flex flex-col items-center opacity-50">
+<div class="w-8 h-8 rounded-full bg-surface-variant text-on-surface-variant dark:bg-outline-variant dark:text-inverse-on-surface flex items-center justify-center font-bold text-sm mb-1">2</div>
+<span class="font-label-md text-label-md text-on-surface-variant dark:text-surface-variant">Indirizzo</span>
+</div>
+<div class="flex-1 h-0.5 bg-surface-variant dark:bg-outline-variant mx-2"></div>
+<div class="flex flex-col items-center opacity-50">
+<div class="w-8 h-8 rounded-full bg-surface-variant text-on-surface-variant dark:bg-outline-variant dark:text-inverse-on-surface flex items-center justify-center font-bold text-sm mb-1">3</div>
+<span class="font-label-md text-label-md text-on-surface-variant dark:text-surface-variant">Riepilogo</span>
+</div>
+</div>
+<!-- Fields Container -->
+<div class="space-y-4">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Nome -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant dark:text-surface-variant mb-1 ml-1" for="nome">Nome <span class="text-primary">*</span></label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 flex items-center pl-3 text-on-surface-variant dark:text-surface-variant">
+<span class="material-symbols-outlined">person</span>
+</span>
+<input class="w-full pl-10 pr-4 py-3 bg-surface-container-lowest dark:bg-inverse-surface border border-outline dark:border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary font-body-lg text-body-lg text-on-surface dark:text-inverse-on-surface transition-colors" id="nome" name="nome" placeholder="Mario" required="" type="text">
+</div>
+<p class="text-[10px] text-on-surface-variant/70 mt-1 ml-1">Campo obbligatorio</p>
+</div>
+<!-- Cognome -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant dark:text-surface-variant mb-1 ml-1" for="cognome">Cognome <span class="text-primary">*</span></label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 flex items-center pl-3 text-on-surface-variant dark:text-surface-variant">
+<span class="material-symbols-outlined">badge</span>
+</span>
+<input class="w-full pl-10 pr-4 py-3 bg-surface-container-lowest dark:bg-inverse-surface border border-outline dark:border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary font-body-lg text-body-lg text-on-surface dark:text-inverse-on-surface transition-colors" id="cognome" name="cognome" placeholder="Rossi" required="" type="text">
+</div>
+<p class="text-[10px] text-on-surface-variant/70 mt-1 ml-1">Campo obbligatorio</p>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Genere -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant dark:text-surface-variant mb-1 ml-1" for="genere">Genere <span class="text-primary">*</span></label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 flex items-center pl-3 text-on-surface-variant dark:text-surface-variant">
+<span class="material-symbols-outlined">wc</span>
+</span>
+<select class="w-full pl-10 pr-10 py-3 bg-surface-container-lowest dark:bg-inverse-surface border border-outline dark:border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary font-body-lg text-body-lg text-on-surface dark:text-inverse-on-surface appearance-none transition-colors" id="genere" name="genere" required="">
+<option disabled="" selected="" value="">Seleziona</option>
+<option value="M">Maschio</option>
+<option value="F">Femmina</option>
+<option value="O">Altro</option>
+</select>
+<span class="absolute inset-y-0 right-0 flex items-center pr-3 text-on-surface-variant dark:text-surface-variant pointer-events-none">
+<span class="material-symbols-outlined">expand_more</span>
+</span>
+</div>
+<p class="text-[10px] text-on-surface-variant/70 mt-1 ml-1">Campo obbligatorio</p>
+</div>
+<!-- Data di Nascita -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant dark:text-surface-variant mb-1 ml-1" for="data_nascita">Data di Nascita <span class="text-primary">*</span></label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 flex items-center pl-3 text-on-surface-variant dark:text-surface-variant">
+<span class="material-symbols-outlined">calendar_today</span>
+</span>
+<input class="w-full pl-10 pr-4 py-3 bg-surface-container-lowest dark:bg-inverse-surface border border-outline dark:border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary font-body-lg text-body-lg text-on-surface dark:text-inverse-on-surface transition-colors" id="data_nascita" name="data_nascita" required="" type="date">
+</div>
+<p class="text-[10px] text-on-surface-variant/70 mt-1 ml-1">Se minorenne, il campo Telefono è opzionale.</p>
+</div>
+</div>
+<!-- Email -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant dark:text-surface-variant mb-1 ml-1" for="email">Email <span class="text-primary">*</span></label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 flex items-center pl-3 text-on-surface-variant dark:text-surface-variant">
+<span class="material-symbols-outlined">mail</span>
+</span>
+<input class="w-full pl-10 pr-4 py-3 bg-surface-container-lowest dark:bg-inverse-surface border border-outline dark:border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary font-body-lg text-body-lg text-on-surface dark:text-inverse-on-surface transition-colors" id="email" name="email" placeholder="email@esempio.com" required="" type="email">
+</div>
+<p class="text-[10px] text-on-surface-variant/70 mt-1 ml-1">Campo obbligatorio</p>
+</div>
+<!-- Password -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant dark:text-surface-variant mb-1 ml-1" for="password">Password <span class="text-primary">*</span></label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 flex items-center pl-3 text-on-surface-variant dark:text-surface-variant">
+<span class="material-symbols-outlined">lock</span>
+</span>
+<input class="w-full pl-10 pr-10 py-3 bg-surface-container-lowest dark:bg-inverse-surface border border-outline dark:border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary font-body-lg text-body-lg text-on-surface dark:text-inverse-on-surface transition-colors" id="password" name="password" placeholder="••••••••" required="" type="password">
+<button class="absolute inset-y-0 right-0 flex items-center pr-3 text-on-surface-variant dark:text-surface-variant hover:text-on-surface focus:outline-none transition-colors" onclick="const p = document.getElementById('password'); p.type = p.type === 'password' ? 'text' : 'password'; this.children[0].innerText = p.type === 'password' ? 'visibility' : 'visibility_off';" type="button">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+</div>
+<p class="text-[10px] text-on-surface-variant/70 mt-1 ml-1">Campo obbligatorio</p>
+</div>
+<!-- Telefono -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant dark:text-surface-variant mb-1 ml-1" for="telefono">Numero di Telefono <span class="font-normal opacity-50 ml-1">(Opzionale)</span></label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 flex items-center pl-3 text-on-surface-variant dark:text-surface-variant">
+<span class="material-symbols-outlined">phone</span>
+</span>
+<input class="w-full pl-10 pr-4 py-3 bg-surface-container-lowest dark:bg-inverse-surface border border-outline dark:border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary font-body-lg text-body-lg text-on-surface dark:text-inverse-on-surface transition-colors" id="telefono" name="telefono" placeholder="es. 3331234567" type="tel">
+</div>
+</div>
+<!-- Dati Genitore -->
+<div class="mt-8 pt-6 border-t border-surface-variant dark:border-outline-variant" id="sezione-genitori">
+<h3 class="font-title-lg text-title-lg font-bold text-on-surface dark:text-inverse-on-surface mb-6">Contatti Genitori</h3>
+<div class="space-y-6">
+<!-- Genitore 1 Group -->
+<div class="bg-surface-variant/20 dark:bg-inverse-surface/50 p-4 rounded-xl border border-outline/20">
+<h4 class="font-label-md text-label-md font-bold text-on-surface-variant uppercase tracking-wider mb-4">Genitore 1 (Obbligatorio)</h4>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1" for="nome_genitore_1">Nome <span class="text-primary">*</span></label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 flex items-center pl-3 text-on-surface-variant"><span class="material-symbols-outlined">person</span></span>
+<input class="w-full pl-10 pr-4 py-3 bg-surface-container-lowest dark:bg-inverse-surface border border-outline rounded-lg focus:ring-2 focus:ring-primary text-body-lg transition-colors" id="nome_genitore_1" name="nome_genitore_1" placeholder="Nome" required="" type="text">
+</div>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1" for="cognome_genitore_1">Cognome <span class="text-primary">*</span></label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 flex items-center pl-3 text-on-surface-variant"><span class="material-symbols-outlined">badge</span></span>
+<input class="w-full pl-10 pr-4 py-3 bg-surface-container-lowest dark:bg-inverse-surface border border-outline rounded-lg focus:ring-2 focus:ring-primary text-body-lg transition-colors" id="cognome_genitore_1" name="cognome_genitore_1" placeholder="Cognome" required="" type="text">
+</div>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1" for="email_genitore_1">Email <span class="text-primary">*</span></label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 flex items-center pl-3 text-on-surface-variant"><span class="material-symbols-outlined">mail</span></span>
+<input class="w-full pl-10 pr-4 py-3 bg-surface-container-lowest dark:bg-inverse-surface border border-outline rounded-lg focus:ring-2 focus:ring-primary text-body-lg transition-colors" id="email_genitore_1" name="email_genitore_1" placeholder="email@esempio.com" required="" type="email">
+</div>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1" for="telefono_genitore_1">Telefono <span class="text-primary">*</span></label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 flex items-center pl-3 text-on-surface-variant"><span class="material-symbols-outlined">phone</span></span>
+<input class="w-full pl-10 pr-4 py-3 bg-surface-container-lowest dark:bg-inverse-surface border border-outline rounded-lg focus:ring-2 focus:ring-primary text-body-lg transition-colors" id="telefono_genitore_1" name="telefono_genitore_1" placeholder="es. 3331234567" required="" type="tel">
+</div>
+</div>
+<div class="col-span-full">
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1" for="password_genitore_1">Password Genitore 1 <span class="text-primary">*</span></label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 flex items-center pl-3 text-on-surface-variant"><span class="material-symbols-outlined">lock</span></span>
+<input class="w-full pl-10 pr-10 py-3 bg-surface-container-lowest dark:bg-inverse-surface border border-outline rounded-lg focus:ring-2 focus:ring-primary text-body-lg transition-colors" id="password_genitore_1" name="password_genitore_1" placeholder="••••••••" required="" type="password">
+<button class="absolute inset-y-0 right-0 flex items-center pr-3 text-on-surface-variant hover:text-on-surface focus:outline-none transition-colors" onclick="const p = document.getElementById('password_genitore_1'); p.type = p.type === 'password' ? 'text' : 'password'; this.children[0].innerText = p.type === 'password' ? 'visibility' : 'visibility_off';" type="button"><span class="material-symbols-outlined">visibility</span></button>
+</div>
+</div>
+</div>
+</div>
+<!-- Genitore 2 Group -->
+<div class="bg-surface-variant/20 dark:bg-inverse-surface/50 p-4 rounded-xl border border-outline/20">
+<h4 class="font-label-md text-label-md font-bold text-on-surface-variant uppercase tracking-wider mb-4">Genitore 2 (Opzionale)</h4>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1" for="nome_genitore_2">Nome</label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 flex items-center pl-3 text-on-surface-variant"><span class="material-symbols-outlined">person</span></span>
+<input class="w-full pl-10 pr-4 py-3 bg-surface-container-lowest dark:bg-inverse-surface border border-outline rounded-lg focus:ring-2 focus:ring-primary text-body-lg transition-colors" id="nome_genitore_2" name="nome_genitore_2" placeholder="Nome" type="text">
+</div>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1" for="cognome_genitore_2">Cognome</label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 flex items-center pl-3 text-on-surface-variant"><span class="material-symbols-outlined">badge</span></span>
+<input class="w-full pl-10 pr-4 py-3 bg-surface-container-lowest dark:bg-inverse-surface border border-outline rounded-lg focus:ring-2 focus:ring-primary text-body-lg transition-colors" id="cognome_genitore_2" name="cognome_genitore_2" placeholder="Cognome" type="text">
+</div>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1" for="email_genitore_2">Email</label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 flex items-center pl-3 text-on-surface-variant"><span class="material-symbols-outlined">mail</span></span>
+<input class="w-full pl-10 pr-4 py-3 bg-surface-container-lowest dark:bg-inverse-surface border border-outline rounded-lg focus:ring-2 focus:ring-primary text-body-lg transition-colors" id="email_genitore_2" name="email_genitore_2" placeholder="email@esempio.com" type="email">
+</div>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1" for="telefono_genitore_2">Telefono</label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 flex items-center pl-3 text-on-surface-variant"><span class="material-symbols-outlined">phone</span></span>
+<input class="w-full pl-10 pr-4 py-3 bg-surface-container-lowest dark:bg-inverse-surface border border-outline rounded-lg focus:ring-2 focus:ring-primary text-body-lg transition-colors" id="telefono_genitore_2" name="telefono_genitore_2" placeholder="es. 3331234567" type="tel">
+</div>
+</div>
+<div class="col-span-full">
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1" for="password_genitore_2">Password Genitore 2</label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 flex items-center pl-3 text-on-surface-variant"><span class="material-symbols-outlined">lock</span></span>
+<input class="w-full pl-10 pr-10 py-3 bg-surface-container-lowest dark:bg-inverse-surface border border-outline rounded-lg focus:ring-2 focus:ring-primary text-body-lg transition-colors" id="password_genitore_2" name="password_genitore_2" placeholder="••••••••" type="password">
+<button class="absolute inset-y-0 right-0 flex items-center pr-3 text-on-surface-variant hover:text-on-surface focus:outline-none transition-colors" onclick="const p = document.getElementById('password_genitore_2'); p.type = p.type === 'password' ? 'text' : 'password'; this.children[0].innerText = p.type === 'password' ? 'visibility' : 'visibility_off';" type="button"><span class="material-symbols-outlined">visibility</span></button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer Actions -->
+<div class="pt-6 mt-6 flex flex-col items-center gap-4 border-t border-surface-variant dark:border-outline-variant">
+<a class="text-sm font-bold text-on-surface-variant hover:text-on-surface transition-colors" href="#">
+                    Torna al Login
+                </a>
+<button class="w-full sm:w-auto px-12 py-3 bg-primary text-on-primary font-label-md text-label-md rounded-full shadow-md hover:opacity-90 active:scale-95 transition-all h-touch-target flex items-center justify-center gap-2" type="button">
+                    Avanti
+                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</form>
+</main>
+<script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dobInput = document.getElementById('data_nascita');
+            const parentSection = document.getElementById('sezione-genitori');
+            const mandatoryParentFields = [
+                document.getElementById('nome_genitore_1'),
+                document.getElementById('cognome_genitore_1'),
+                document.getElementById('email_genitore_1'),
+                document.getElementById('telefono_genitore_1'),
+                document.getElementById('password_genitore_1')
+            ];
+
+            function updateParentSectionVisibility() {
+                if (!dobInput.value) return;
+
+                const birthDate = new Date(dobInput.value);
+                const today = new Date();
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const m = today.getMonth() - birthDate.getMonth();
+                if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                    age--;
+                }
+
+                if (age >= 18) {
+                    parentSection.classList.add('hidden');
+                    mandatoryParentFields.forEach(field => {
+                        if (field) field.removeAttribute('required');
+                    });
+                } else {
+                    parentSection.classList.remove('hidden');
+                    mandatoryParentFields.forEach(field => {
+                        if (field) field.setAttribute('required', '');
+                    });
+                }
+            }
+
+            dobInput.addEventListener('change', updateParentSectionVisibility);
+            updateParentSectionVisibility();
+        });
+    </script>
+
+
+</body></html>

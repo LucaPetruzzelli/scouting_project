@@ -1,0 +1,263 @@
+<!DOCTYPE html><html lang="it"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Login - AGESCI Bari 10</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-background": "#271816",
+                    "security-shield": "#455A64",
+                    "surface-white": "#FFFFFF",
+                    "on-tertiary-fixed": "#001f2a",
+                    "surface-dim": "#f1d3d0",
+                    "surface-container": "#ffe9e7",
+                    "inverse-primary": "#ffb3ac",
+                    "scout-blue": "#1976D2",
+                    "surface-container-lowest": "#ffffff",
+                    "on-secondary-container": "#003567",
+                    "primary-container": "#d32f2f",
+                    "on-tertiary-container": "#e9f7ff",
+                    "outline": "#8f6f6c",
+                    "tertiary-fixed-dim": "#7bd1f8",
+                    "primary-fixed-dim": "#ffb3ac",
+                    "surface-container-low": "#fff0ef",
+                    "error": "#C62828",
+                    "surface-container-highest": "#f9dcd9",
+                    "on-secondary": "#ffffff",
+                    "surface-variant": "#f9dcd9",
+                    "on-surface": "#271816",
+                    "error-container": "#ffdad6",
+                    "secondary-fixed-dim": "#a5c8ff",
+                    "reparto-green": "#388E3C",
+                    "on-secondary-fixed": "#001c3a",
+                    "inverse-on-surface": "#ffedeb",
+                    "surface-bright": "#fff8f7",
+                    "on-primary": "#ffffff",
+                    "outline-variant": "#e4beba",
+                    "tertiary-container": "#00799c",
+                    "primary": "#af101a",
+                    "surface-tint": "#ba1a20",
+                    "on-primary-fixed": "#410003",
+                    "tertiary-fixed": "#bee9ff",
+                    "on-tertiary": "#ffffff",
+                    "scout-red": "#D32F2F",
+                    "on-secondary-fixed-variant": "#004786",
+                    "success": "#2E7D32",
+                    "surface": "#fff8f7",
+                    "on-tertiary-fixed-variant": "#004d65",
+                    "surface-container-high": "#ffe2de",
+                    "branco-yellow": "#FFEB3B",
+                    "secondary-container": "#54a0fe",
+                    "on-primary-container": "#fff2f0",
+                    "inverse-surface": "#3e2c2a",
+                    "on-error-container": "#93000a",
+                    "primary-fixed": "#ffdad6",
+                    "clan-red": "#B71C1C",
+                    "on-surface-variant": "#5b403d",
+                    "secondary": "#005faf",
+                    "secondary-fixed": "#d4e3ff",
+                    "on-error": "#ffffff",
+                    "background": "#fff8f7",
+                    "tertiary": "#005f7b",
+                    "on-primary-fixed-variant": "#930010"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "container-margin": "16px",
+                    "touch-target": "48px",
+                    "section-gap": "24px",
+                    "base": "8px",
+                    "gutter": "16px"
+            },
+            "fontFamily": {
+                    "display-lg": [
+                            "Poppins", "sans-serif"
+                    ],
+                    "body-lg": [
+                            "Poppins", "sans-serif"
+                    ],
+                    "title-lg": [
+                            "Poppins", "sans-serif"
+                    ],
+                    "headline-lg-mobile": [
+                            "Poppins", "sans-serif"
+                    ],
+                    "headline-md": [
+                            "Poppins", "sans-serif"
+                    ],
+                    "headline-lg": [
+                            "Poppins", "sans-serif"
+                    ],
+                    "body-md": [
+                            "Poppins", "sans-serif"
+                    ],
+                    "label-md": [
+                            "Poppins", "sans-serif"
+                    ]
+            },
+            "fontSize": {
+                    "display-lg": [
+                            "45px",
+                            {
+                                    "lineHeight": "52px",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "body-lg": [
+                            "16px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "title-lg": [
+                            "22px",
+                            {
+                                    "lineHeight": "28px",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "headline-lg-mobile": [
+                            "28px",
+                            {
+                                    "lineHeight": "34px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "headline-md": [
+                            "28px",
+                            {
+                                    "lineHeight": "36px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "headline-lg": [
+                            "32px",
+                            {
+                                    "lineHeight": "40px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "body-md": [
+                            "14px",
+                            {
+                                    "lineHeight": "20px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "label-md": [
+                            "12px",
+                            {
+                                    "lineHeight": "16px",
+                                    "letterSpacing": "0.5px",
+                                    "fontWeight": "500"
+                            }
+                    ]
+            }
+    },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Poppins', sans-serif; }
+        .label-font { font-family: 'Poppins', sans-serif; }
+        
+        /* Custom toggle styling */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #D32F2F; /* scout-red */
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #D32F2F; /* scout-red */
+        }
+        .toggle-checkbox:checked + .toggle-label:after {
+            transform: translateX(100%);
+            border-color: white;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-surface-container dark:bg-background min-h-screen flex items-center justify-center p-4">
+<!-- Login Canvas -->
+<main class="w-full max-w-[440px] bg-surface-container-lowest dark:bg-surface-bright rounded-2xl shadow-xl overflow-hidden relative border border-outline-variant/50 dark:border-outline/20">
+<!-- Subtle top accent line -->
+<div class="h-1.5 w-full bg-scout-red"></div>
+<div class="p-8 sm:p-10">
+<!-- Header Section -->
+<div class="flex flex-col items-center mb-8">
+<div class="w-24 h-24 rounded-2xl overflow-hidden mb-6 shadow-sm border border-surface-container-high dark:border-surface-variant bg-surface-white flex items-center justify-center p-1">
+<img alt="AGESCI Logo" class="w-full h-full object-cover rounded-xl" data-alt="A stylized square app icon featuring a graphic of a scout knot. The knot is drawn with deep navy blue dashed lines, representing rope, set against a vibrant, solid red background." src="https://lh3.googleusercontent.com/aida/ADBb0uguwHY34zCnVMLBOZ6pdbM-4XkuTK0ey9sryPnGxN5ThwvooLnlEWbHuKswq9KUfl_NsEXhwjybv80TMu8ynRriUJqj5VnKkpvNvcuPMVlxaiQDvnxagsm8EvyUDRMKkt3-3EEHyWhtcRjcyXE-d9SYrBbELtJLyK3T8eR7ET_4Sutp5eKvKn9wSTY4BuUQr64sSqVadND0WqK7S_D-G3CkyJcsLj3K7pdRLhEmst5N-BpoCbDq77ppr3Jndhjd7TY6knNZRdkyIAg">
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface dark:text-on-surface text-center leading-tight"><span class="text-scout-red">Scouting</span></h1>
+<p class="font-body-md text-body-md text-on-surface-variant dark:text-outline mt-2 text-center">AGESCI Bari 10</p>
+</div>
+<!-- Form Section -->
+<form class="space-y-5">
+<!-- Identifier Input -->
+<div class="space-y-1.5">
+<label class="font-label-md text-label-md text-on-surface dark:text-on-surface font-semibold label-font pl-1 block" for="identifier">Email</label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline">person</span>
+</div>
+<input class="block w-full pl-11 pr-4 py-3.5 bg-surface-bright dark:bg-surface-container border border-outline-variant dark:border-outline rounded-xl text-on-surface dark:text-on-surface font-body-lg text-body-lg placeholder-outline dark:placeholder-outline focus:ring-2 focus:ring-scout-blue focus:border-scout-blue dark:focus:ring-scout-blue dark:focus:border-scout-blue transition-shadow duration-200" id="identifier" name="identifier" placeholder="Inserisci email" type="text">
+</div>
+</div>
+<!-- Password Input -->
+<div class="space-y-1.5">
+<label class="font-label-md text-label-md text-on-surface dark:text-on-surface font-semibold label-font pl-1 block" for="password">Password</label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline">lock</span>
+</div>
+<input class="block w-full pl-11 pr-11 py-3.5 bg-surface-bright dark:bg-surface-container border border-outline-variant dark:border-outline rounded-xl text-on-surface dark:text-on-surface font-body-lg text-body-lg placeholder-outline dark:placeholder-outline focus:ring-2 focus:ring-scout-blue focus:border-scout-blue dark:focus:ring-scout-blue dark:focus:border-scout-blue transition-shadow duration-200" id="password" name="password" placeholder="••••••••" type="password">
+<button class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-outline hover:text-on-surface dark:hover:text-surface-white transition-colors" type="button">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+</div>
+</div>
+<!-- Primary Action -->
+<div class="pt-4">
+<button class="w-full flex items-center justify-center gap-2 bg-scout-red hover:bg-primary text-surface-white font-title-lg text-title-lg py-4 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.98]" type="submit">
+<span class="material-symbols-outlined" style="font-variation-settings: &quot;FILL&quot; 1;">login</span>
+<span class="">Accedi</span>
+</button>
+</div>
+</form>
+<!-- Secondary Actions -->
+<div class="mt-8 flex flex-col items-center gap-3">
+<a class="font-body-md text-body-md text-scout-blue dark:text-secondary-fixed-dim hover:text-on-secondary-container dark:hover:text-secondary-fixed hover:underline transition-colors font-medium" href="#">
+                    Password dimenticata?
+                </a><a class="font-body-md text-body-md text-scout-blue dark:text-secondary-fixed-dim hover:text-on-secondary-container dark:hover:text-secondary-fixed hover:underline transition-colors font-medium" href="#">
+                    Crea un nuovo account
+                </a>
+<a class="font-body-md text-body-md text-outline dark:text-outline-variant hover:text-on-surface dark:hover:text-surface-white transition-colors flex items-center gap-1" href="#">
+<span class="material-symbols-outlined text-[18px]">help</span>
+                    Problemi di accesso?
+                </a>
+</div>
+<!-- Secure Context Indicator -->
+<div class="mt-8 pt-4 border-t border-surface-variant dark:border-outline/30 flex items-center justify-center gap-1.5 text-outline dark:text-outline-variant">
+<span class="material-symbols-outlined text-[16px]">shield_lock</span>
+<span class="font-label-md text-label-md label-font uppercase tracking-wider">Connessione Sicura</span>
+</div>
+</div>
+</main>
+
+
+</body></html>
