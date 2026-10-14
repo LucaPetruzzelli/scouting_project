@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../events/providers/events_provider.dart';
-import '../../events/models/event_model.dart';
 import 'package:intl/intl.dart';
 
 class SociDashboard extends ConsumerWidget {
