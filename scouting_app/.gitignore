@@ -44,4 +44,6 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-echo -e "\n# Variabili d'ambiente\n.env\n*.env" >> scouting_app/.gitignore
+.env
+*.env
+**/.env
