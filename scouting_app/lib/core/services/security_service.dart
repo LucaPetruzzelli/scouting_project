@@ -9,11 +9,12 @@ class SecurityService {
   static const String _pinStorageKey = 'scouting_user_security_pin';
 
   /// Verifica se l'utente ha almeno un fattore 2FA/MFA verificato su Supabase
+  /// Verifica se l'utente ha almeno un fattore 2FA/MFA verificato su Supabase
   static Future<bool> isMfaEnabled() async {
     final client = Supabase.instance.client;
     try {
       final res = await client.auth.mfa.listFactors();
-      return res.verified.isNotEmpty;
+      return res.all.any((factor) => factor.status == FactorStatus.verified);
     } catch (_) {
       return false;
     }
