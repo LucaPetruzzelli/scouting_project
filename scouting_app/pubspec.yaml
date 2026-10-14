@@ -29,6 +29,12 @@ dependencies:
   firebase_core: ^4.12.1
   firebase_messaging: ^16.4.3
   flutter_local_notifications: ^19.5.0
+  syncfusion_flutter_pdf: ^29.1.38
+  signature: ^5.5.0
+  printing: ^5.14.3
+  local_auth: ^2.3.0
+  flutter_secure_storage: ^10.3.4
+  connectivity_plus: ^7.3.1
 
 dev_dependencies:
   flutter_test:
