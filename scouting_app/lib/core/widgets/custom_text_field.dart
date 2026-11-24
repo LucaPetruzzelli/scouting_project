@@ -54,7 +54,7 @@ class CustomTextField extends StatelessWidget {
           decoration: InputDecoration(
             hintText: placeholder,
             hintStyle: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
             ),
             prefixIcon: icon != null
                 ? Icon(

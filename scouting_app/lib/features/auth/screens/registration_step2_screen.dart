@@ -290,12 +290,12 @@ class _RegistrationStep2ScreenState extends ConsumerState<RegistrationStep2Scree
   }
 
   Widget _buildStepIndicator(BuildContext context, String step, String title, {required bool isActive, bool isCompleted = false}) {
-    final color = isActive || isCompleted ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5);
+    final color = isActive || isCompleted ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5);
     return Column(
       children: [
         CircleAvatar(
           radius: 14,
-          backgroundColor: isActive || isCompleted ? color : color.withOpacity(0.2),
+          backgroundColor: isActive || isCompleted ? color : color.withValues(alpha: 0.2),
           child: isCompleted 
             ? Icon(Icons.check, size: 16, color: Theme.of(context).colorScheme.onPrimary)
             : Text(
@@ -325,7 +325,7 @@ class _RegistrationStep2ScreenState extends ConsumerState<RegistrationStep2Scree
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 8).copyWith(bottom: 16),
         height: 2,
-        color: isCompleted ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.2),
+        color: isCompleted ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.2),
       ),
     );
   }

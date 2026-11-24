@@ -211,6 +211,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     int firstWeekday = firstDayOfMonth.weekday; // 1=Lun, 7=Dom
     int leadingBlanks = firstWeekday - 1; // quante celle vuote all'inizio
     final totalCells = _calculateCellCount(firstDayOfMonth, daysInMonth);
+    final weeksNeeded = _calculateWeeksNeeded(leadingBlanks, daysInMonth);
 
     final today = DateTime.now();
 
@@ -224,6 +225,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     // Lista eventi del giorno selezionato
     final selectedKey = DateFormat('yyyy-MM-dd').format(selectedDate);
     final selectedEvents = eventsByDay[selectedKey] ?? [];
+
+    // Calcola l'altezza della griglia basata sul numero di settimane
+    final weekHeaderHeight = 40.0; // altezza header giorni settimana
+    final dividerHeight = 1.0;
+    final eventsSectionMinHeight = 100.0; // altezza minima per la sezione eventi
 
     return Column(
       children: [
@@ -247,86 +253,90 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         ),
         const SizedBox(height: 4),
 
-        // Griglia giorni
-        Flexible(
-          flex: 3,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: GridView.builder(
-              physics: const NeverScrollableScrollPhysics(),
-              shrinkWrap: true,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 7,
-                childAspectRatio: 1.0,
-                crossAxisSpacing: 2,
-                mainAxisSpacing: 2,
-              ),
-              itemCount: totalCells,
-              itemBuilder: (context, index) {
-                // Celle vuote all'inizio del mese
-                if (index < leadingBlanks) return const SizedBox.shrink();
+        // Griglia giorni con altezza dinamica
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          child: SizedBox(
+            height: weeksNeeded * 72.0, // 72 = altezza media di una riga (72 * 6 = 432px per 6 settimane)
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: GridView.builder(
+                physics: const NeverScrollableScrollPhysics(),
+                shrinkWrap: true,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 7,
+                  childAspectRatio: 1.0,
+                  crossAxisSpacing: 2,
+                  mainAxisSpacing: 2,
+                ),
+                itemCount: totalCells,
+                itemBuilder: (context, index) {
+                  // Celle vuote all'inizio del mese
+                  if (index < leadingBlanks) return const SizedBox.shrink();
 
-                // Celle vuote alla fine del mese (se necessario per riempire 6 settimane)
-                if (index >= leadingBlanks + daysInMonth) return const SizedBox.shrink();
+                  // Celle vuote alla fine del mese (se necessario per riempire 6 settimane)
+                  if (index >= leadingBlanks + daysInMonth) return const SizedBox.shrink();
 
-                final day = index - leadingBlanks + 1;
-                final date = DateTime(firstDayOfMonth.year, firstDayOfMonth.month, day);
-                final dateKey = DateFormat('yyyy-MM-dd').format(date);
-                final dayEvents = eventsByDay[dateKey] ?? [];
-                final isToday = date.year == today.year && date.month == today.month && date.day == today.day;
-                final isSelected = date.year == selectedDate.year && date.month == selectedDate.month && date.day == selectedDate.day;
+                  final day = index - leadingBlanks + 1;
+                  final date = DateTime(firstDayOfMonth.year, firstDayOfMonth.month, day);
+                  final dateKey = DateFormat('yyyy-MM-dd').format(date);
+                  final dayEvents = eventsByDay[dateKey] ?? [];
+                  final isToday = date.year == today.year && date.month == today.month && date.day == today.day;
+                  final isSelected = date.year == selectedDate.year && date.month == selectedDate.month && date.day == selectedDate.day;
 
-                return GestureDetector(
-                  onTap: () {
-                    ref.read(selectedDateProvider.notifier).state = date;
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? Theme.of(context).colorScheme.primary
-                          : isToday
-                              ? Theme.of(context).colorScheme.primaryContainer
-                              : null,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          '$day',
-                          style: TextStyle(
-                            fontWeight: isToday || isSelected ? FontWeight.bold : FontWeight.normal,
-                            color: isSelected
-                                ? Theme.of(context).colorScheme.onPrimary
-                                : isToday
-                                    ? Theme.of(context).colorScheme.primary
-                                    : null,
-                            fontSize: 13,
-                          ),
-                        ),
-                        if (dayEvents.isNotEmpty)
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: dayEvents.take(3).map((e) {
-                              return Container(
-                                width: 5,
-                                height: 5,
-                                margin: const EdgeInsets.only(right: 1),
-                                decoration: BoxDecoration(
-                                  color: isSelected
+                  return GestureDetector(
+                    onTap: () {
+                      ref.read(selectedDateProvider.notifier).state = date;
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? Theme.of(context).colorScheme.primary
+                            : isToday
+                                ? Colors.red
+                                : null,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            '$day',
+                            style: TextStyle(
+                              fontWeight: isToday || isSelected ? FontWeight.bold : FontWeight.normal,
+                              color: isSelected
+                                  ? Theme.of(context).colorScheme.onPrimary
+                                  : isToday
                                       ? Colors.white
-                                      : _eventTypeColor(e.eventType),
-                                  shape: BoxShape.circle,
-                                ),
-                              );
-                            }).toList(),
+                                      : null,
+                              fontSize: 13,
+                            ),
                           ),
-                      ],
+                          if (dayEvents.isNotEmpty)
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: dayEvents.take(3).map((e) {
+                                return Container(
+                                  width: 5,
+                                  height: 5,
+                                  margin: const EdgeInsets.only(right: 1),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? Colors.white
+                                        : _eventTypeColor(e.eventType),
+                                    shape: BoxShape.circle,
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
           ),
         ),
@@ -334,8 +344,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         const Divider(height: 1),
 
         // Lista eventi del giorno selezionato
-        Flexible(
-          flex: 4,
+        Expanded(
           child: selectedEvents.isEmpty
               ? Center(
                   child: Text(
@@ -691,5 +700,13 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     final totalCells = leadingBlanks + daysInMonth;
     // Sempre almeno 6 settimane (42 celle)
     return totalCells < 42 ? 42 : totalCells;
+  }
+
+  /// Calcola il numero di settimane necessarie per visualizzare il mese
+  /// in base al primo giorno della settimana e ai giorni del mese
+  int _calculateWeeksNeeded(int leadingBlanks, int daysInMonth) {
+    final totalCells = leadingBlanks + daysInMonth;
+    final weeks = (totalCells / 7).ceil();
+    return weeks < 6 ? 6 : weeks;
   }
 }

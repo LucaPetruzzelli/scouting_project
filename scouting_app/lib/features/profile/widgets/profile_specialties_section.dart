@@ -118,7 +118,7 @@ class _ProfileSpecialtiesSectionState extends State<ProfileSpecialtiesSection> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+          color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Text(
@@ -139,8 +139,8 @@ class _ProfileSpecialtiesSectionState extends State<ProfileSpecialtiesSection> {
             : item['name'] ?? '';
         return Chip(
           label: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
-          backgroundColor: color.withOpacity(0.15),
-          side: BorderSide(color: color.withOpacity(0.4)),
+          backgroundColor: color.withValues(alpha: 0.15),
+          side: BorderSide(color: color.withValues(alpha: 0.4)),
           deleteIcon: Icon(Icons.close, size: 16, color: color),
           onDeleted: () => _deleteItem(isAchieved, i),
         );

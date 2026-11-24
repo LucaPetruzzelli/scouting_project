@@ -91,9 +91,9 @@ class SociDashboard extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -124,7 +124,7 @@ class SociDashboard extends ConsumerWidget {
   Widget _buildEventCard(BuildContext context, {required String title, String? description, required String location, required String date, String? cost}) {
     return Card(
       elevation: 0,
-      color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+      color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),

@@ -147,7 +147,7 @@ class _RegistrationStep3ScreenState extends ConsumerState<RegistrationStep3Scree
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
                     ),
@@ -253,9 +253,9 @@ class _RegistrationStep3ScreenState extends ConsumerState<RegistrationStep3Scree
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.2),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.5)),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -289,14 +289,14 @@ class _RegistrationStep3ScreenState extends ConsumerState<RegistrationStep3Scree
         Icon(
           isValid ? Icons.check_circle : Icons.circle_outlined,
           size: 16,
-          color: isValid ? Colors.green : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
+          color: isValid ? Colors.green : Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
         ),
         const SizedBox(width: 8),
         Text(
           text,
           style: TextStyle(
             fontSize: 12,
-            color: isValid ? Colors.green : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.8),
+            color: isValid ? Colors.green : Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
           ),
         ),
       ],
@@ -318,12 +318,12 @@ class _RegistrationStep3ScreenState extends ConsumerState<RegistrationStep3Scree
   }
 
   Widget _buildStepIndicator(BuildContext context, String step, String title, {required bool isActive, bool isCompleted = false}) {
-    final color = isActive || isCompleted ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5);
+    final color = isActive || isCompleted ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5);
     return Column(
       children: [
         CircleAvatar(
           radius: 14,
-          backgroundColor: isActive || isCompleted ? color : color.withOpacity(0.2),
+          backgroundColor: isActive || isCompleted ? color : color.withValues(alpha: 0.2),
           child: isCompleted 
             ? Icon(Icons.check, size: 16, color: Theme.of(context).colorScheme.onPrimary)
             : Text(
@@ -353,7 +353,7 @@ class _RegistrationStep3ScreenState extends ConsumerState<RegistrationStep3Scree
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 8).copyWith(bottom: 16),
         height: 2,
-        color: isCompleted ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.2),
+        color: isCompleted ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.2),
       ),
     );
   }

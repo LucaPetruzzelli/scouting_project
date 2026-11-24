@@ -93,9 +93,9 @@ class _RegistrationStep1ScreenState extends ConsumerState<RegistrationStep1Scree
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.blue.withOpacity(0.1),
+                      color: Colors.blue.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                      border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -271,12 +271,12 @@ class _RegistrationStep1ScreenState extends ConsumerState<RegistrationStep1Scree
   }
 
   Widget _buildStepIndicator(BuildContext context, String step, String title, {required bool isActive}) {
-    final color = isActive ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5);
+    final color = isActive ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5);
     return Column(
       children: [
         CircleAvatar(
           radius: 14,
-          backgroundColor: isActive ? color : color.withOpacity(0.2),
+          backgroundColor: isActive ? color : color.withValues(alpha: 0.2),
           child: Text(
             step,
             style: TextStyle(
@@ -304,7 +304,7 @@ class _RegistrationStep1ScreenState extends ConsumerState<RegistrationStep1Scree
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 8).copyWith(bottom: 16),
         height: 2,
-        color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.2),
+        color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.2),
       ),
     );
   }

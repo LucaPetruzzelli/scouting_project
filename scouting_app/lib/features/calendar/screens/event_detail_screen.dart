@@ -106,7 +106,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
               background: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [color, color.withOpacity(0.7)],
+                    colors: [color, color.withValues(alpha: 0.7)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -115,7 +115,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
                   child: Icon(
                     _eventTypeIcon(widget.event.eventType),
                     size: 80,
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                   ),
                 ),
               ),
@@ -304,10 +304,10 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
                   return ListTile(
                     leading: CircleAvatar(
                       backgroundColor: isPresent == true
-                          ? Colors.green.withOpacity(0.2)
+                          ? Colors.green.withValues(alpha: 0.2)
                           : isPresent == false
-                              ? Colors.red.withOpacity(0.2)
-                              : Colors.grey.withOpacity(0.2),
+                              ? Colors.red.withValues(alpha: 0.2)
+                              : Colors.grey.withValues(alpha: 0.2),
                       child: Text(
                         nome.isNotEmpty ? nome[0].toUpperCase() : '?',
                         style: TextStyle(
@@ -407,9 +407,9 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.12),
+          color: color.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Text(
           label,
@@ -426,7 +426,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
           width: 56,
           height: 56,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.12),
+            color: color.withValues(alpha: 0.12),
             shape: BoxShape.circle,
           ),
           child: Center(
@@ -497,7 +497,7 @@ class _AttendanceConfirmationWidgetState
                 color: _status == 'confirmed' ? Colors.green : Colors.grey,
                 width: _status == 'confirmed' ? 2 : 1,
               ),
-              backgroundColor: _status == 'confirmed' ? Colors.green.withOpacity(0.1) : null,
+              backgroundColor: _status == 'confirmed' ? Colors.green.withValues(alpha: 0.1) : null,
             ),
             onPressed: _loading ? null : () => _setAttendance('confirmed'),
           ),
@@ -513,7 +513,7 @@ class _AttendanceConfirmationWidgetState
                 color: _status == 'declined' ? Colors.red : Colors.grey,
                 width: _status == 'declined' ? 2 : 1,
               ),
-              backgroundColor: _status == 'declined' ? Colors.red.withOpacity(0.1) : null,
+              backgroundColor: _status == 'declined' ? Colors.red.withValues(alpha: 0.1) : null,
             ),
             onPressed: _loading ? null : () => _setAttendance('declined'),
           ),
@@ -570,8 +570,8 @@ class _SocioPaymentStatusWidget extends ConsumerWidget {
 
         return Card(
           color: hasPaid
-              ? Colors.green.withOpacity(0.1)
-              : Colors.orange.withOpacity(0.1),
+              ? Colors.green.withValues(alpha: 0.1)
+              : Colors.orange.withValues(alpha: 0.1),
           child: ListTile(
             leading: Icon(
               hasPaid ? Icons.check_circle : Icons.pending,

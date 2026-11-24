@@ -236,7 +236,7 @@ class _SearchMembersScreenState extends State<SearchMembersScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.search_off, size: 64,
-                                color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.4)),
+                                color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.4)),
                             const SizedBox(height: 16),
                             Text(
                               'Nessun membro trovato',

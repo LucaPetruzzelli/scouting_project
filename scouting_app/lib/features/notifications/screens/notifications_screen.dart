@@ -53,7 +53,7 @@ class NotificationsScreen extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.notifications_off_outlined, size: 64, color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5)),
+                  Icon(Icons.notifications_off_outlined, size: 64, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
                   const SizedBox(height: 16),
                   Text('Nessuna notifica', style: theme.textTheme.titleLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
                   const SizedBox(height: 8),
@@ -105,8 +105,8 @@ class NotificationsScreen extends ConsumerWidget {
                     );
                   },
                   child: Material(
-                    color: isUnread 
-                        ? theme.colorScheme.primaryContainer.withOpacity(0.3)
+                    color: isUnread
+                        ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3)
                         : Colors.transparent,
                     child: InkWell(
                       onTap: () {

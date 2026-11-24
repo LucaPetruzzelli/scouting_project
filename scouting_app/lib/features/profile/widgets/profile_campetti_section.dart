@@ -167,7 +167,7 @@ class _ProfileCampettiSectionState extends ConsumerState<ProfileCampettiSection>
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
