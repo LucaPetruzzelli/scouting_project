@@ -8,7 +8,8 @@ import '../widgets/greeting_header.dart';
 import '../widgets/soci_dashboard.dart';
 import '../widgets/capi_dashboard.dart';
 import '../../profile/screens/profile_screen.dart';
-import '../../events/screens/events_list_screen.dart';
+import '../../calendar/screens/calendar_screen.dart';
+import '../../search/screens/search_members_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -80,50 +81,74 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildActiveScreen(BuildContext context, WidgetRef ref, Map<String, dynamic>? profile) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('AGESCI Bari 10'),
-        actions: [
-          Consumer(
-            builder: (context, ref, child) {
-              final notifState = ref.watch(notificationsProvider);
-              final count = notifState.value?.where((n) => !n.isRead).length ?? 0;
-              
-              return IconButton(
-                icon: Badge(
-                  isLabelVisible: count > 0,
-                  label: Text(count.toString()),
-                  child: const Icon(Icons.notifications_none),
+      appBar: _selectedIndex == 0
+          ? AppBar(
+              title: const Text('AGESCI Bari 10'),
+              actions: [
+                Consumer(
+                  builder: (context, ref, child) {
+                    final notifState = ref.watch(notificationsProvider);
+                    final count = notifState.value?.where((n) => !n.isRead).length ?? 0;
+
+                    return IconButton(
+                      icon: Badge(
+                        isLabelVisible: count > 0,
+                        label: Text(count.toString()),
+                        child: const Icon(Icons.notifications_none),
+                      ),
+                      onPressed: () => context.push('/notifications'),
+                    );
+                  },
                 ),
-                onPressed: () => context.push('/notifications'),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => ref.read(authProvider.notifier).signOut(),
-          ),
-        ],
-      ),
+                IconButton(
+                  icon: const Icon(Icons.logout),
+                  onPressed: () => ref.read(authProvider.notifier).signOut(),
+                ),
+              ],
+            )
+          : null,
       body: _buildBody(profile),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
         onDestinationSelected: (idx) => setState(() => _selectedIndex = idx),
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard), label: 'Home'),
-          NavigationDestination(icon: Icon(Icons.event_outlined), selectedIcon: Icon(Icons.event), label: 'Eventi'),
-          NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: 'Profilo'),
+          NavigationDestination(
+            icon: Icon(Icons.dashboard_outlined),
+            selectedIcon: Icon(Icons.dashboard),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.calendar_month_outlined),
+            selectedIcon: Icon(Icons.calendar_month),
+            label: 'Calendario',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.search_outlined),
+            selectedIcon: Icon(Icons.search),
+            label: 'Ricerca',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
+            label: 'Profilo',
+          ),
         ],
       ),
     );
   }
 
   Widget _buildBody(Map<String, dynamic>? profile) {
-    if (_selectedIndex == 0) {
-      return _buildDashboard(profile);
-    } else if (_selectedIndex == 1) {
-      return const EventsListScreen();
-    } else {
-      return const ProfileScreen();
+    switch (_selectedIndex) {
+      case 0:
+        return _buildDashboard(profile);
+      case 1:
+        return const CalendarScreen();
+      case 2:
+        return const SearchMembersScreen();
+      case 3:
+        return const ProfileScreen();
+      default:
+        return _buildDashboard(profile);
     }
   }
 

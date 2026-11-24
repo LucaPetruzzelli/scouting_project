@@ -5,6 +5,7 @@ import '../../auth/providers/auth_provider.dart';
 import '../widgets/scout_card.dart';
 import '../widgets/profile_campetti_section.dart';
 import '../widgets/profile_specialties_section.dart';
+import '../../../core/theme/theme_provider.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -13,93 +14,157 @@ class ProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
     final profile = authState.profile;
+    final themeMode = ref.watch(themeProvider);
 
     if (profile == null) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final nome = profile['nome'] ?? 'Scout';
-    final cognome = profile['cognome'] ?? '';
-    final role = profile['role'] ?? 'socio';
-    final branch = profile['branch'] ?? 'Non assegnata';
-    final jungleName = profile['jungle_name'] as String?;
-
-    // Determina se mostrare la sezione specialità
-    // Solo per soci (non capi) del Branco (l/c) o Reparto (e/g)
-    final isSocio = role == 'socio';
-    final showSpecialties = isSocio && (branch == 'l/c' || branch == 'e/g');
-
-    // I campetti dei capi sono visibili solo a capi
-    // (il check di visibilità lato UI è già garantito dato che
-    //  ogni utente vede solo il proprio profilo qui)
-    final showCampetti = true; // tutti i ruoli vedono la propria sezione campetti
-
-    return ListView(
-      padding: const EdgeInsets.all(16.0),
-      children: [
-        // Card identità
-        ScoutCard(
-          name: nome,
-          surname: cognome,
-          role: role,
-          branch: branch,
-          jungleName: jungleName,
-        ),
-        const SizedBox(height: 8),
-
-        // Soprannome (solo capi branco): chip informativo
-        if ((role == 'capo' || role == 'capo gruppo') && branch == 'l/c' && jungleName != null && jungleName.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Chip(
-              avatar: const Icon(Icons.forest, size: 18),
-              label: Text('Soprannome della giungla: $jungleName'),
-              backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-            ),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Profilo'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Impostazioni'),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.light_mode),
+                        title: const Text('Tema Chiaro'),
+                        trailing: Radio<ThemeMode>(
+                          value: ThemeMode.light,
+                          groupValue: themeMode,
+                          onChanged: (mode) {
+                            ref.read(themeProvider.notifier).setTheme(mode!);
+                            Navigator.pop(context);
+                          },
+                        ),
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.dark_mode),
+                        title: const Text('Tema Scuro'),
+                        trailing: Radio<ThemeMode>(
+                          value: ThemeMode.dark,
+                          groupValue: themeMode,
+                          onChanged: (mode) {
+                            ref.read(themeProvider.notifier).setTheme(mode!);
+                            Navigator.pop(context);
+                          },
+                        ),
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.brightness_auto),
+                        title: const Text('Automatico'),
+                        trailing: Radio<ThemeMode>(
+                          value: ThemeMode.system,
+                          groupValue: themeMode,
+                          onChanged: (mode) {
+                            ref.read(themeProvider.notifier).setTheme(mode!);
+                            Navigator.pop(context);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
-
-        const SizedBox(height: 24),
-        const Divider(),
-        const SizedBox(height: 8),
-
-        // Sezione Censimento (Privata)
-        ListTile(
-          leading: const Icon(Icons.security, color: Colors.blue),
-          title: const Text('Gestione Censimento'),
-          subtitle: const Text('Ricevuta bonifico e stato di registrazione'),
-          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-          onTap: () {
-            context.push('/profile/censimento');
-          },
-        ),
-        
-        const SizedBox(height: 8),
-        const Divider(),
-        const SizedBox(height: 16),
-
-        // Sezione Campetti
-        if (showCampetti) ...[
-          ProfileCampettiSection(profile: profile),
-          const SizedBox(height: 24),
-          const Divider(),
-          const SizedBox(height: 16),
         ],
-
-        // Sezione Specialità e Competenze (solo soci L/C ed E/G)
-        if (showSpecialties) ...[
-          ProfileSpecialtiesSection(profile: profile),
-          const SizedBox(height: 24),
-        ],
-
-        // Placeholder per sezioni future
-        if (!showSpecialties)
-          Center(
-            child: Text(
-              'Altre sezioni del profilo in arrivo...',
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+      ),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(16.0),
+          children: [
+            // Card identità
+            ScoutCard(
+              name: profile['nome'] ?? 'Scout',
+              surname: profile['cognome'] ?? '',
+              role: profile['role'] ?? 'socio',
+              branch: profile['branch'] ?? 'Non assegnata',
+              jungleName: profile['jungle_name'] as String?,
             ),
-          ),
-      ],
+            const SizedBox(height: 8),
+
+            // Soprannome (solo capi branco): chip informativo
+            if ((profile['role'] == 'capo' || profile['role'] == 'capo gruppo') &&
+                profile['branch'] == 'l/c' &&
+                profile['jungle_name'] != null &&
+                (profile['jungle_name'] as String).isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Chip(
+                  avatar: const Icon(Icons.forest, size: 18),
+                  label: Text('Soprannome della giungla: ${profile['jungle_name']}'),
+                  backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+                ),
+              ),
+
+            const SizedBox(height: 24),
+            const Divider(),
+            const SizedBox(height: 8),
+
+            // Sezione Censimento (Privata)
+            ListTile(
+              leading: const Icon(Icons.security, color: Colors.blue),
+              title: const Text('Gestione Censimento'),
+              subtitle: const Text('Ricevuta bonifico e stato di registrazione'),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () {
+                context.push('/profile/censimento');
+              },
+            ),
+
+            const SizedBox(height: 8),
+            const Divider(),
+            const SizedBox(height: 16),
+
+            // Sezione Campetti
+            ProfileCampettiSection(profile: profile),
+            const SizedBox(height: 24),
+            const Divider(),
+            const SizedBox(height: 16),
+
+            // Sezione Specialità e Competenze (solo soci L/C ed E/G)
+            _buildSpecialtiesSection(profile),
+
+            // Placeholder per sezioni future
+            if (!(_profileIsSocioWithSpecialties(profile)))
+              Center(
+                child: Text(
+                  'Altre sezioni del profilo in arrivo...',
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
+}
+
+bool _profileIsSocioWithSpecialties(Map<String, dynamic>? profile) {
+  if (profile == null) return false;
+  final role = profile['role'] ?? 'socio';
+  final branch = profile['branch'] ?? 'Non assegnata';
+  final isSocio = role == 'socio';
+  return isSocio && (branch == 'l/c' || branch == 'e/g');
+}
+
+Widget _buildSpecialtiesSection(Map<String, dynamic>? profile) {
+  if (!_profileIsSocioWithSpecialties(profile)) {
+    return const SizedBox.shrink();
+  }
+  return Column(
+    children: [
+      ProfileSpecialtiesSection(profile: profile!),
+      const SizedBox(height: 24),
+    ],
+  );
 }

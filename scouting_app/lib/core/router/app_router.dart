@@ -13,34 +13,35 @@ import '../../features/notifications/screens/notifications_screen.dart';
 import '../../features/events/screens/events_list_screen.dart';
 import '../../features/events/screens/event_creation_screen.dart';
 import '../../features/events/screens/event_groups_screen.dart';
+import '../../features/events/screens/event_logistics_screen.dart';
 import '../../features/events/models/event_model.dart';
 import '../../features/profile/screens/censimento_screen.dart';
 import '../../features/events/screens/event_payments_screen.dart';
+import '../../features/calendar/screens/calendar_screen.dart';
+import '../../features/calendar/screens/event_detail_screen.dart';
+import '../../features/warehouse/screens/warehouse_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final router = GoRouter(
     initialLocation: '/login',
     redirect: (context, state) {
       final authState = ref.read(authProvider);
-      
-      final isAuth = authState.status == AuthStatus.authenticatedActive || 
-                     authState.status == AuthStatus.authenticatedPending;
-      
+
+      final isAuth = authState.status == AuthStatus.authenticatedActive ||
+          authState.status == AuthStatus.authenticatedPending;
+
       final isGoingToLogin = state.matchedLocation == '/login';
       final isGoingToRegister = state.matchedLocation.startsWith('/register');
 
       if (authState.status == AuthStatus.initial) {
-        // Ancora in caricamento, non reindirizziamo da nessuna parte per ora
         return null;
       }
 
       if (!isAuth && !isGoingToLogin && !isGoingToRegister) {
-        // Se non sei loggato e provi ad accedere a pagine protette, vai al login
         return '/login';
       }
 
       if (isAuth && isGoingToLogin) {
-        // Se sei già loggato e provi ad andare al login, vai alla home
         return '/home';
       }
 
@@ -102,10 +103,40 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
+        path: '/events/logistics',
+        builder: (context, state) {
+          final event = state.extra as EventModel;
+          return EventLogisticsScreen(event: event);
+        },
+      ),
+      GoRoute(
         path: '/events/payments',
         builder: (context, state) {
           final event = state.extra as EventModel;
           return EventPaymentsScreen(event: event);
+        },
+      ),
+      GoRoute(
+        path: '/events/detail',
+        builder: (context, state) {
+          final event = state.extra as EventModel;
+          return EventDetailScreen(event: event);
+        },
+      ),
+      GoRoute(
+        path: '/calendar',
+        builder: (context, state) => const CalendarScreen(),
+      ),
+      GoRoute(
+        path: '/warehouse',
+        builder: (context, state) {
+          final profile = state.extra as Map<String, dynamic>?;
+          // If no profile passed, try to get from auth provider
+          return WarehouseScreen(
+            userBranca: profile?['branch'] as String? ?? '',
+            canEditPermanent: profile?['role'] == 'capo' || profile?['role'] == 'capo gruppo' || profile?['is_warehouse_keeper'] == true,
+            hasTemporaryLogisticsAccess: profile?['hasTemporaryLogisticsAccess'] == true,
+          );
         },
       ),
       GoRoute(

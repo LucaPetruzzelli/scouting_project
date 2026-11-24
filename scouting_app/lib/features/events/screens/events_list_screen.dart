@@ -49,14 +49,42 @@ class EventsListScreen extends ConsumerWidget {
                             final role = profile['role'];
                             final isCapo = role == 'capo' || role == 'capo gruppo';
                             final isLogistica = event.logisticsUsers.contains(profile['id']);
-                            if (isCapo || isLogistica) {
-                              return OutlinedButton.icon(
-                                icon: const Icon(Icons.euro, size: 16),
-                                label: const Text('Gestisci Quote'),
-                                onPressed: () => context.push('/events/payments', extra: event),
+
+                            final List<Widget> buttons = [];
+
+                            if (event.logisticsUsers.isNotEmpty) {
+                              buttons.add(
+                                Expanded(
+                                  child: OutlinedButton.icon(
+                                    icon: const Icon(Icons.local_shipping, size: 16),
+                                    label: const Text('Logistica'),
+                                    onPressed: () => context.push('/events/logistics', extra: event),
+                                  ),
+                                ),
                               );
                             }
-                            return const SizedBox.shrink();
+
+                            if (isCapo || isLogistica) {
+                              buttons.add(
+                                Expanded(
+                                  child: OutlinedButton.icon(
+                                    icon: const Icon(Icons.euro, size: 16),
+                                    label: const Text('Quote'),
+                                    onPressed: () => context.push('/events/payments', extra: event),
+                                  ),
+                                ),
+                              );
+                            }
+
+                            if (buttons.isEmpty) {
+                              return const SizedBox.shrink();
+                            }
+
+                            return Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: buttons,
+                            );
                           }
                         ),
                       ],

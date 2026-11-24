@@ -57,11 +57,23 @@ class EventPaymentsRepository {
     }
   }
 
+  Future<List<Map<String, dynamic>>> getAttendance(String eventId) async {
+    try {
+      final response = await _supabase
+          .from('event_attendance')
+          .select()
+          .eq('event_id', eventId);
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      print('Errore getAttendance: $e');
+      return [];
+    }
+  }
+
   Future<bool> togglePayment(String eventId, String profileId, bool hasPaid) async {
     try {
       final uid = _supabase.auth.currentUser?.id;
       if (hasPaid) {
-        // Inserisci o aggiorna a true
         await _supabase.from('event_payments').upsert({
           'event_id': eventId,
           'profile_id': profileId,
@@ -69,7 +81,6 @@ class EventPaymentsRepository {
           'verified_by': uid,
         }, onConflict: 'event_id, profile_id');
       } else {
-        // Aggiorna a false (o elimina)
         await _supabase.from('event_payments').update({
           'has_paid': false,
           'verified_by': uid,
@@ -79,6 +90,38 @@ class EventPaymentsRepository {
     } catch (e) {
       print('Errore togglePayment: $e');
       return false;
+    }
+  }
+
+  /// Appello capi: segna la presenza effettiva di un socio a un evento
+  Future<void> markAttendance(String eventId, String userId, bool isPresent) async {
+    try {
+      final uid = _supabase.auth.currentUser?.id;
+      await _supabase.from('event_attendance').upsert({
+        'event_id': eventId,
+        'user_id': userId,
+        'actual_present': isPresent,
+        'updated_by': uid,
+        'updated_at': DateTime.now().toIso8601String(),
+      }, onConflict: 'event_id, user_id');
+    } catch (e) {
+      print('Errore markAttendance: $e');
+      rethrow;
+    }
+  }
+
+  /// Socio/genitore conferma o declina la sua partecipazione
+  Future<void> confirmAttendance(String eventId, String userId, String status) async {
+    try {
+      await _supabase.from('event_attendance').upsert({
+        'event_id': eventId,
+        'user_id': userId,
+        'pre_confirmation': status,
+        'updated_at': DateTime.now().toIso8601String(),
+      }, onConflict: 'event_id, user_id');
+    } catch (e) {
+      print('Errore confirmAttendance: $e');
+      rethrow;
     }
   }
 }

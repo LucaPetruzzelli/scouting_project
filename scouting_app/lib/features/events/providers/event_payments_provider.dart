@@ -26,13 +26,28 @@ class EventPaymentsNotifier extends StateNotifier<AsyncValue<Map<String, dynamic
 
       // 2. Fetch payments for this event
       final payments = await _repo.getPayments(_event.id);
-      final paymentMap = {for (var p in payments) p['profile_id'] as String: p['has_paid'] as bool};
+      final paymentMap = {
+        for (var p in payments) p['profile_id'] as String: p['has_paid'] as bool
+      };
 
-      // 3. Combine
+      // 3. Fetch attendance records
+      final attendance = await _repo.getAttendance(_event.id);
+      final attendanceMap = {
+        for (var a in attendance)
+          a['user_id'] as String: {
+            'actual_present': a['actual_present'],
+            'pre_confirmation': a['pre_confirmation'],
+          }
+      };
+
+      // 4. Combine
       final combined = participants.map((p) {
+        final att = attendanceMap[p['id'] as String] ?? {};
         return {
           ...p,
           'has_paid': paymentMap[p['id']] ?? false,
+          'actual_present': att['actual_present'],
+          'pre_confirmation': att['pre_confirmation'] ?? 'pending',
         };
       }).toList();
 
@@ -55,7 +70,6 @@ class EventPaymentsNotifier extends StateNotifier<AsyncValue<Map<String, dynamic
   Future<bool> togglePayment(String profileId, bool hasPaid) async {
     final success = await _repo.togglePayment(_event.id, profileId, hasPaid);
     if (success) {
-      // Aggiorna lo stato localmente per non dover rifare tutte le query
       state = state.whenData((data) {
         final participants = List<Map<String, dynamic>>.from(data['participants']);
         final index = participants.indexWhere((p) => p['id'] == profileId);
@@ -64,10 +78,36 @@ class EventPaymentsNotifier extends StateNotifier<AsyncValue<Map<String, dynamic
         }
         return {
           'participants': participants,
-          'payments': data['payments'], // Questo non è strettamente necessario aggiornarlo se usiamo participants
+          'payments': data['payments'],
         };
       });
     }
     return success;
+  }
+
+  /// Registra la presenza effettiva (appello capi)
+  Future<void> markAttendance(String profileId, bool isPresent) async {
+    await _repo.markAttendance(_event.id, profileId, isPresent);
+    state = state.whenData((data) {
+      final participants = List<Map<String, dynamic>>.from(data['participants']);
+      final index = participants.indexWhere((p) => p['id'] == profileId);
+      if (index != -1) {
+        participants[index]['actual_present'] = isPresent;
+      }
+      return {'participants': participants, 'payments': data['payments']};
+    });
+  }
+
+  /// Conferma o declina la partecipazione (soci)
+  Future<void> confirmAttendance(String userId, String status) async {
+    await _repo.confirmAttendance(_event.id, userId, status);
+    state = state.whenData((data) {
+      final participants = List<Map<String, dynamic>>.from(data['participants']);
+      final index = participants.indexWhere((p) => p['id'] == userId);
+      if (index != -1) {
+        participants[index]['pre_confirmation'] = status;
+      }
+      return {'participants': participants, 'payments': data['payments']};
+    });
   }
 }

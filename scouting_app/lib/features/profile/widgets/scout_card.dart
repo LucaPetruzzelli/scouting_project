@@ -21,8 +21,17 @@ class ScoutCard extends StatelessWidget {
     final isCapoBranco = (role == 'capo' || role == 'capo gruppo') && branch == 'l/c';
     final hasJungleName = isCapoBranco && jungleName != null && jungleName!.isNotEmpty;
 
+    // Get status bar padding to prevent overlap
+    final double topPadding = MediaQuery.of(context).padding.top;
+    final double safeTopPadding = 24 + (topPadding > 0 ? 8 : 0);
+
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.only(
+        top: safeTopPadding,
+        left: 24,
+        right: 24,
+        bottom: 24,
+      ),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -35,7 +44,7 @@ class ScoutCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
             blurRadius: 12,
             offset: const Offset(0, 6),
           )
@@ -89,7 +98,7 @@ class ScoutCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Text(
