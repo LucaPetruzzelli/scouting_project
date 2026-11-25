@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 import '../../events/providers/events_provider.dart';
 import '../../events/models/event_model.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../notifications/providers/notifications_provider.dart';
+import '../../../core/theme/app_colors.dart';
 
 // Enum per la vista del calendario
 enum CalendarView { month, week, day }
@@ -49,6 +51,21 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       appBar: AppBar(
         title: const Text('Calendario'),
         actions: [
+          Consumer(
+            builder: (context, ref, child) {
+              final notifState = ref.watch(notificationsProvider);
+              final count = notifState.value?.where((n) => !n.isRead).length ?? 0;
+
+              return IconButton(
+                icon: Badge(
+                  isLabelVisible: count > 0,
+                  label: Text(count.toString()),
+                  child: const Icon(Icons.notifications_none),
+                ),
+                onPressed: () => context.push('/notifications'),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.today),
             onPressed: () {
@@ -104,16 +121,31 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   Widget _buildViewSelector(CalendarView currentView) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: SegmentedButton<CalendarView>(
-        selected: {currentView},
-        onSelectionChanged: (val) {
-          ref.read(calendarViewProvider.notifier).state = val.first;
-        },
-        segments: const [
-          ButtonSegment(value: CalendarView.month, label: Text('Mese'), icon: Icon(Icons.calendar_month, size: 16)),
-          ButtonSegment(value: CalendarView.week, label: Text('Settimana'), icon: Icon(Icons.view_week, size: 16)),
-          ButtonSegment(value: CalendarView.day, label: Text('Giorno'), icon: Icon(Icons.view_day, size: 16)),
-        ],
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: SegmentedButton<CalendarView>(
+          selected: {currentView},
+          onSelectionChanged: (val) {
+            ref.read(calendarViewProvider.notifier).state = val.first;
+          },
+          segments: const [
+            ButtonSegment(
+              value: CalendarView.month,
+              label: Text('Mese'),
+              icon: Icon(Icons.calendar_month, size: 16),
+            ),
+            ButtonSegment(
+              value: CalendarView.week,
+              label: Text('Settimana'),
+              icon: Icon(Icons.view_week, size: 16),
+            ),
+            ButtonSegment(
+              value: CalendarView.day,
+              label: Text('Giorno'),
+              icon: Icon(Icons.view_day, size: 16),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -191,7 +223,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       setState(() {
         _currentMonth = DateTime(_currentMonth.year, _currentMonth.month + direction, 1);
       });
-      ref.read(selectedDateProvider.notifier).state = _currentMonth;
+      // NON cambiare la data selezionata quando si naviga tra i mesi
+      // La data selezionata rimane quella scelta dall'utente (o oggi se non ha selezionato nulla)
     } else if (view == CalendarView.week) {
       ref.read(selectedDateProvider.notifier).state =
           current.add(Duration(days: 7 * direction));
@@ -210,10 +243,17 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     // Giorno della settimana del primo giorno (1=Lun, 7=Dom → adattiamo a 0-based)
     int firstWeekday = firstDayOfMonth.weekday; // 1=Lun, 7=Dom
     int leadingBlanks = firstWeekday - 1; // quante celle vuote all'inizio
-    final totalCells = _calculateCellCount(firstDayOfMonth, daysInMonth);
-    final weeksNeeded = _calculateWeeksNeeded(leadingBlanks, daysInMonth);
+    final totalCells = leadingBlanks + daysInMonth;
+    // Arrotonda al multiplo di 7 più vicino (minimo 35 celle = 5 settimane)
+    final cellsCount = totalCells < 35 ? 35 : ((totalCells / 7).ceil() * 7);
+    final weeksNeeded = cellsCount ~/ 7;
 
     final today = DateTime.now();
+    final isCurrentMonth = firstDayOfMonth.year == today.year && firstDayOfMonth.month == today.month;
+
+    // Verifica se l'utente ha selezionato un giorno specifico in questo mese
+    final isSelectedDayInCurrentMonth = selectedDate.year == firstDayOfMonth.year &&
+        selectedDate.month == firstDayOfMonth.month;
 
     // Raggruppa eventi per data
     Map<String, List<EventModel>> eventsByDay = {};
@@ -222,144 +262,183 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       eventsByDay.putIfAbsent(key, () => []).add(event);
     }
 
-    // Lista eventi del giorno selezionato
-    final selectedKey = DateFormat('yyyy-MM-dd').format(selectedDate);
-    final selectedEvents = eventsByDay[selectedKey] ?? [];
+    // Determina quali eventi mostrare:
+    // - Se l'utente ha selezionato un giorno in questo mese: solo eventi di quel giorno
+    // - Altrimenti: tutti gli eventi del mese corrente visualizzato
+    List<EventModel> eventsToShow;
+    String emptyMessage;
+    if (isSelectedDayInCurrentMonth) {
+      final selectedKey = DateFormat('yyyy-MM-dd').format(selectedDate);
+      eventsToShow = eventsByDay[selectedKey] ?? [];
+      final weekday = DateFormat('EEEE', 'it_IT').format(selectedDate);
+      final day = selectedDate.day;
+      final month = DateFormat('MMMM', 'it_IT').format(selectedDate);
+      emptyMessage = 'nessun evento in programma $weekday $day $month';
+    } else {
+      // Mostra tutti gli eventi del mese visualizzato
+      eventsToShow = [];
+      for (int day = 1; day <= daysInMonth; day++) {
+        final date = DateTime(firstDayOfMonth.year, firstDayOfMonth.month, day);
+        final key = DateFormat('yyyy-MM-dd').format(date);
+        eventsToShow.addAll(eventsByDay[key] ?? []);
+      }
+      final month = DateFormat('MMMM', 'it_IT').format(firstDayOfMonth);
+      emptyMessage = 'nessun evento in programma per $month';
+    }
 
-    // Calcola l'altezza della griglia basata sul numero di settimane
-    final weekHeaderHeight = 40.0; // altezza header giorni settimana
-    final dividerHeight = 1.0;
-    final eventsSectionMinHeight = 100.0; // altezza minima per la sezione eventi
+    // Altezza fissa per ogni riga settimana
+    const double weekRowHeight = 76.0;
 
-    return Column(
-      children: [
-        // Header giorni settimana
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: Row(
-            children: ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'].map((d) {
-              return Expanded(
-                child: Text(
-                  d,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-        const SizedBox(height: 4),
-
-        // Griglia giorni con altezza dinamica
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
+    return CustomScrollView(
+      slivers: [
+        // Header giorni settimana - altezza fissa
+        SliverToBoxAdapter(
           child: SizedBox(
-            height: weeksNeeded * 72.0, // 72 = altezza media di una riga (72 * 6 = 432px per 6 settimane)
+            height: 28,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: GridView.builder(
-                physics: const NeverScrollableScrollPhysics(),
-                shrinkWrap: true,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 7,
-                  childAspectRatio: 1.0,
-                  crossAxisSpacing: 2,
-                  mainAxisSpacing: 2,
-                ),
-                itemCount: totalCells,
-                itemBuilder: (context, index) {
-                  // Celle vuote all'inizio del mese
-                  if (index < leadingBlanks) return const SizedBox.shrink();
-
-                  // Celle vuote alla fine del mese (se necessario per riempire 6 settimane)
-                  if (index >= leadingBlanks + daysInMonth) return const SizedBox.shrink();
-
-                  final day = index - leadingBlanks + 1;
-                  final date = DateTime(firstDayOfMonth.year, firstDayOfMonth.month, day);
-                  final dateKey = DateFormat('yyyy-MM-dd').format(date);
-                  final dayEvents = eventsByDay[dateKey] ?? [];
-                  final isToday = date.year == today.year && date.month == today.month && date.day == today.day;
-                  final isSelected = date.year == selectedDate.year && date.month == selectedDate.month && date.day == selectedDate.day;
-
-                  return GestureDetector(
-                    onTap: () {
-                      ref.read(selectedDateProvider.notifier).state = date;
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? Theme.of(context).colorScheme.primary
-                            : isToday
-                                ? Colors.red
-                                : null,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            '$day',
-                            style: TextStyle(
-                              fontWeight: isToday || isSelected ? FontWeight.bold : FontWeight.normal,
-                              color: isSelected
-                                  ? Theme.of(context).colorScheme.onPrimary
-                                  : isToday
-                                      ? Colors.white
-                                      : null,
-                              fontSize: 13,
-                            ),
-                          ),
-                          if (dayEvents.isNotEmpty)
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: dayEvents.take(3).map((e) {
-                                return Container(
-                                  width: 5,
-                                  height: 5,
-                                  margin: const EdgeInsets.only(right: 1),
-                                  decoration: BoxDecoration(
-                                    color: isSelected
-                                        ? Colors.white
-                                        : _eventTypeColor(e.eventType),
-                                    shape: BoxShape.circle,
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                        ],
+              child: Row(
+                children: ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'].map((d) {
+                  return Expanded(
+                    child: Center(
+                      child: Text(
+                        d,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   );
-                },
+                }).toList(),
               ),
             ),
           ),
         ),
+        const SliverToBoxAdapter(child: SizedBox(height: 4)),
 
-        const Divider(height: 1),
+        // Griglia giorni con righe ad altezza fissa
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Column(
+              children: List.generate(weeksNeeded, (weekIndex) {
+                return SizedBox(
+                  height: weekRowHeight,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: List.generate(7, (dayIndex) {
+                      final cellIndex = weekIndex * 7 + dayIndex;
 
-        // Lista eventi del giorno selezionato
-        Expanded(
-          child: selectedEvents.isEmpty
-              ? Center(
-                  child: Text(
-                    'Nessun evento il ${DateFormat('d MMMM', 'it_IT').format(selectedDate)}',
-                    style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      // Celle vuote all'inizio del mese
+                      if (cellIndex < leadingBlanks) {
+                        return const Expanded(child: SizedBox.shrink());
+                      }
+
+                      // Celle vuote alla fine del mese
+                      if (cellIndex >= leadingBlanks + daysInMonth) {
+                        return const Expanded(child: SizedBox.shrink());
+                      }
+
+                      final day = cellIndex - leadingBlanks + 1;
+                      final date = DateTime(firstDayOfMonth.year, firstDayOfMonth.month, day);
+                      final dateKey = DateFormat('yyyy-MM-dd').format(date);
+                      final dayEvents = eventsByDay[dateKey] ?? [];
+
+                      // Evidenzia SOLO il giorno corrente nel mese corrente
+                      final isToday = isCurrentMonth && date.year == today.year && date.month == today.month && date.day == today.day;
+                      // Evidenzia il giorno selezionato (se in questo mese)
+                      final isSelected = isSelectedDayInCurrentMonth && date.year == selectedDate.year && date.month == selectedDate.month && date.day == selectedDate.day;
+
+                      return Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            ref.read(selectedDateProvider.notifier).state = date;
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? Theme.of(context).colorScheme.primary
+                                  : isToday
+                                      ? Colors.red
+                                      : null,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  '$day',
+                                  style: TextStyle(
+                                    fontWeight: isToday || isSelected ? FontWeight.bold : FontWeight.normal,
+                                    color: isSelected
+                                        ? Theme.of(context).colorScheme.onPrimary
+                                        : isToday
+                                            ? Colors.white
+                                            : null,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                                if (dayEvents.isNotEmpty)
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: dayEvents.take(3).map((e) {
+                                      return Container(
+                                        width: 5,
+                                        height: 5,
+                                        margin: const EdgeInsets.only(right: 1),
+                                        decoration: BoxDecoration(
+                                          color: isSelected
+                                              ? Colors.white
+                                              : isToday
+                                                  ? Colors.white
+                                                                                                : _getBranchBackgroundColor(e.targetBranches),
+                                          shape: BoxShape.circle,
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
                   ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.all(12),
-                  itemCount: selectedEvents.length,
-                  itemBuilder: (context, index) {
-                    return _buildEventTile(selectedEvents[index]);
-                  },
-                ),
+                );
+              }),
+            ),
+          ),
         ),
+
+        const SliverToBoxAdapter(child: Divider(height: 1)),
+
+        // Lista eventi - scorre insieme alla griglia
+        SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (context, index) {
+              if (eventsToShow.isEmpty) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Text(
+                      emptyMessage,
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                    ),
+                  ),
+                );
+              }
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                child: _buildEventTile(eventsToShow[index]),
+              );
+            },
+            childCount: eventsToShow.isEmpty ? 1 : eventsToShow.length,
+          ),
+        ),
+        // Spazio extra in fondo per non tagliare l'ultimo evento
+        const SliverToBoxAdapter(child: SizedBox(height: 16)),
       ],
     );
   }
@@ -377,6 +456,16 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       final key = DateFormat('yyyy-MM-dd').format(event.startDate);
       eventsByDay.putIfAbsent(key, () => []).add(event);
     }
+
+    // Lista eventi del giorno selezionato
+    final key = DateFormat('yyyy-MM-dd').format(selectedDate);
+    final dayEvents = eventsByDay[key] ?? [];
+
+    // Formatta messaggio vuoto con giorno settimana, giorno, mese
+    final weekday = DateFormat('EEEE', 'it_IT').format(selectedDate);
+    final day = selectedDate.day;
+    final month = DateFormat('MMMM', 'it_IT').format(selectedDate);
+    final emptyMessage = 'nessun evento in programma $weekday $day $month';
 
     return Column(
       children: [
@@ -453,23 +542,18 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
         // Lista eventi del giorno selezionato
         Expanded(
-          child: () {
-            final key = DateFormat('yyyy-MM-dd').format(selectedDate);
-            final dayEvents = eventsByDay[key] ?? [];
-            if (dayEvents.isEmpty) {
-              return Center(
-                child: Text(
-                  'Nessun evento il ${DateFormat('EEEE d MMMM', 'it_IT').format(selectedDate)}',
-                  style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+          child: dayEvents.isEmpty
+              ? Center(
+                  child: Text(
+                    emptyMessage,
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.all(12),
+                  itemCount: dayEvents.length,
+                  itemBuilder: (context, index) => _buildEventTile(dayEvents[index]),
                 ),
-              );
-            }
-            return ListView.builder(
-              padding: const EdgeInsets.all(12),
-              itemCount: dayEvents.length,
-              itemBuilder: (context, index) => _buildEventTile(dayEvents[index]),
-            );
-          }(),
         ),
       ],
     );
@@ -484,6 +568,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           e.startDate.day == selectedDate.day;
     }).toList();
 
+    // Formatta messaggio vuoto con giorno settimana, giorno, mese
+    final weekday = DateFormat('EEEE', 'it_IT').format(selectedDate);
+    final day = selectedDate.day;
+    final month = DateFormat('MMMM', 'it_IT').format(selectedDate);
+    final emptyMessage = 'nessun evento in programma $weekday $day $month';
+
     if (dayEvents.isEmpty) {
       return Center(
         child: Column(
@@ -492,7 +582,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             Icon(Icons.event_busy, size: 64, color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.4)),
             const SizedBox(height: 16),
             Text(
-              'Nessun evento oggi',
+              emptyMessage,
               style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
             ),
           ],
@@ -510,7 +600,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   // ─── CARD EVENTO ─────────────────────────────────────────────────────────────
 
   Widget _buildEventTile(EventModel event, {bool expanded = false}) {
-    final color = _eventTypeColor(event.eventType);
+    final branchLabel = _formatBranchLabel(event.targetBranches);
+    final branchColor = _getBranchLabelColor(event.targetBranches);
     final timeStr = DateFormat('HH:mm').format(event.startDate);
     final endTimeStr = DateFormat('HH:mm').format(event.endDate);
     final profile = ref.read(authProvider).profile;
@@ -518,169 +609,335 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         (profile['role'] == 'capo' || profile['role'] == 'capo gruppo');
     final isCreator = profile != null && event.createdBy == profile['id'];
 
+    // Single subtle tinted background - no visible gradient bands
+    final backgroundTint = branchColor.withValues(alpha: 0.035);
+    final borderColor = branchColor.withValues(alpha: 0.22);
+    final accentBarColor = branchColor.withValues(alpha: 0.85);
+
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(color: borderColor, width: 1.5),
+      ),
+      elevation: 0,
+      color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
         onTap: () => context.push('/events/detail', extra: event),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Colore evento tipo
-              Container(
-                width: 4,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: color,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            // Single solid tinted color - eliminates gradient banding
+            color: backgroundTint,
+            // Left accent border as primary visual indicator
+            border: Border(
+              left: BorderSide(color: accentBarColor, width: 4),
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: color.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            event.eventType,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: color,
-                            ),
-                          ),
-                        ),
-                        if (event.fee != null) ...[ 
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: Colors.green.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              '€ ${event.fee!.toStringAsFixed(0)}',
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.green,
+                        Row(
+                          children: [
+                            // Branch label chip - solid background with white text for high contrast
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: branchColor,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: branchColor.withValues(alpha: 0.3),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Text(
+                                branchLabel,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                  letterSpacing: 0.3,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      event.title,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(Icons.access_time, size: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
-                        const SizedBox(width: 4),
-                        Text(
-                          '$timeStr – $endTimeStr',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                        if (event.location != null && event.location!.isNotEmpty) ...[
-                          const SizedBox(width: 10),
-                          Icon(Icons.location_on, size: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
-                          const SizedBox(width: 4),
-                          Flexible(
-                            child: Text(
-                              event.location!,
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontStyle: FontStyle.italic,
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            if (event.fee != null) ...[
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                                ),
+                                child: Text(
+                                  '€ ${event.fee!.toStringAsFixed(0)}',
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.green,
+                                  ),
+                                ),
                               ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              if (isCapo || isCreator)
-                PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert, size: 18),
-                  onSelected: (value) async {
-                    if (value == 'edit') {
-                      context.push('/events/edit', extra: event);
-                    } else if (value == 'delete') {
-                      final confirm = await showDialog<bool>(
-                        context: context,
-                        builder: (ctx) => AlertDialog(
-                          title: const Text('Elimina evento'),
-                          content: const Text('Sei sicuro?'),
-                          actions: [
-                            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annulla')),
-                            TextButton(
-                              onPressed: () => Navigator.pop(ctx, true),
-                              child: const Text('Elimina', style: TextStyle(color: Colors.red)),
-                            ),
+                            ],
                           ],
                         ),
-                      );
-                      if (confirm == true && mounted) {
-                        await ref.read(eventsProvider.notifier).deleteEvent(event.id);
-                      }
-                    } else if (value == 'payments') {
-                      context.push('/events/payments', extra: event);
-                    }
-                  },
-                  itemBuilder: (_) => [
-                    if (isCapo || isCreator)
-                      const PopupMenuItem(value: 'edit', child: Text('Modifica')),
-                    if (event.fee != null)
-                      const PopupMenuItem(value: 'payments', child: Text('Gestione Quote')),
-                    if (isCapo || isCreator)
-                      const PopupMenuItem(
-                        value: 'delete',
-                        child: Text('Elimina', style: TextStyle(color: Colors.red)),
-                      ),
-                  ],
-                ),
-            ],
+                        const SizedBox(height: 8),
+                        Text(
+                          event.title,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(Icons.access_time, size: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                            const SizedBox(width: 4),
+                            Text(
+                              '$timeStr – $endTimeStr',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            if (event.location != null && event.location!.isNotEmpty) ...[
+                              const SizedBox(width: 10),
+                              Icon(Icons.location_on, size: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                              const SizedBox(width: 4),
+                              Flexible(
+                                child: Text(
+                                  event.location!,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontStyle: FontStyle.italic,
+                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (isCapo || isCreator)
+                    PopupMenuButton<String>(
+                      icon: Icon(Icons.more_vert, size: 18, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      onSelected: (value) async {
+                        if (value == 'edit') {
+                          context.push('/events/edit', extra: event);
+                        } else if (value == 'delete') {
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: const Text('Elimina evento'),
+                              content: const Text('Sei sicuro?'),
+                              actions: [
+                                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annulla')),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx, true),
+                                  child: const Text('Elimina', style: TextStyle(color: Colors.red)),
+                                ),
+                              ],
+                            ),
+                          );
+                          if (confirm == true && mounted) {
+                            await ref.read(eventsProvider.notifier).deleteEvent(event.id);
+                          }
+                        } else if (value == 'payments') {
+                          context.push('/events/payments', extra: event);
+                        }
+                      },
+                      itemBuilder: (_) => [
+                        if (isCapo || isCreator)
+                          const PopupMenuItem(value: 'edit', child: Text('Modifica')),
+                        if (event.fee != null)
+                          const PopupMenuItem(value: 'payments', child: Text('Gestione Quote')),
+                        if (isCapo || isCreator)
+                          const PopupMenuItem(
+                            value: 'delete',
+                            child: Text('Elimina', style: TextStyle(color: Colors.red)),
+                          ),
+                      ],
+                    ),
+                ],
+              ),
+            ),
           ),
         ),
-      ),
+      );
+  }
+
+  /// Gets the background color for an event tile based on target branches
+  /// Rules:
+  /// - Pure yellow for branco-only
+  /// - Pure green for reparto-only
+  /// - Pure red for clan-only (or fuoco)
+  /// - Pure purple for comunità capi-only (or coca) OR for "gruppo" (all 4 branches)
+  /// - Blended colors for multi-branch events that don't include all 4 branches
+  Color _getBranchBackgroundColor(List<String> targetBranches) {
+    if (targetBranches.isEmpty) {
+      return Theme.of(context).colorScheme.surface;
+    }
+
+    final colors = _mapBranchesToColors(targetBranches);
+
+    // Se non ci sono colori riconosciuti, restituisci superficie
+    if (colors.isEmpty) {
+      return Theme.of(context).colorScheme.surface;
+    }
+
+    // Se c'è un solo colore, restituiscilo puro
+    if (colors.length == 1) {
+      return colors.first;
+    }
+
+    // Verifica se abbiamo tutte e 4 le branche (branco, reparto, clan, comunità capi)
+    final hasBranco = colors.contains(AppColors.brancoYellow);
+    final hasReparto = colors.contains(AppColors.repartoGreen);
+    final hasClan = colors.contains(AppColors.clanRed);
+    final hasCoca = colors.contains(AppColors.cocaPurple);
+
+    // Se ci sono tutte e 4 le branche (gruppo completo), restituisci viola puro
+    if (hasBranco && hasReparto && hasClan && hasCoca) {
+      return AppColors.cocaPurple;
+    }
+
+    // Altrimenti, blend dei colori presenti
+    return _blendColors(colors);
+  }
+
+  /// Maps branch names to their corresponding colors
+  List<Color> _mapBranchesToColors(List<String> branches) {
+    final colors = <Color>[];
+    final normalizedBranches = branches.map((b) => b.toLowerCase().trim()).toList();
+
+    for (final branch in normalizedBranches) {
+      if (branch == 'branco') {
+        colors.add(AppColors.brancoYellow);
+      } else if (branch == 'reparto') {
+        colors.add(AppColors.repartoGreen);
+      } else if (branch == 'clan' || branch == 'fuoco' || branch == 'clan/fuoco') {
+        colors.add(AppColors.clanRed);
+      } else if (branch == 'comunità capi' || branch == 'coca' || branch == 'co.ca.') {
+        colors.add(AppColors.cocaPurple);
+      }
+      // Nota: 'gruppo' non viene mappato qui - viene gestito in _getBranchBackgroundColor
+      // controllando se tutte e 4 le branche sono presenti
+    }
+
+    return colors;
+  }
+
+  /// Blends multiple colors together by averaging their RGB components
+  Color _blendColors(List<Color> colors) {
+    if (colors.isEmpty) {
+      return Theme.of(context).colorScheme.surface;
+    }
+
+    int r = 0, g = 0, b = 0;
+
+    for (final color in colors) {
+      r += color.r.toInt();
+      g += color.g.toInt();
+      b += color.b.toInt();
+    }
+
+    final count = colors.length;
+    return Color.fromARGB(
+      255,
+      r ~/ count,
+      g ~/ count,
+      b ~/ count,
     );
   }
 
-  Color _eventTypeColor(String type) {
-    switch (type) {
-      case 'Riunione': return Colors.blue;
-      case 'Uscita': return Colors.green;
-      case 'Campo': return Colors.orange;
-      default: return Colors.purple;
+  /// Formats branch names for display in event tiles
+  /// - All 4 branches → "Gruppo"
+  /// - Single branch → short name (e.g., "Co.Ca.", "Branco")
+  /// - Multiple branches → comma-separated short names
+  String _formatBranchLabel(List<String> branches) {
+    if (branches.isEmpty) return 'Evento';
+
+    final normalized = branches.map((b) => b.toLowerCase().trim()).toList();
+
+    // Check if all 4 branches are present (Gruppo)
+    final hasBranco = normalized.contains('branco');
+    final hasReparto = normalized.contains('reparto');
+    final hasClan = normalized.contains('clan') || normalized.contains('fuoco') || normalized.contains('clan/fuoco');
+    final hasCoca = normalized.contains('comunità capi') || normalized.contains('coca') || normalized.contains('co.ca.');
+
+    if (hasBranco && hasReparto && hasClan && hasCoca) {
+      return 'Gruppo';
     }
+
+    // Map to short display names
+    final shortNames = <String>[];
+    for (final branch in normalized) {
+      if (branch == 'branco') {
+        shortNames.add('Branco');
+      } else if (branch == 'reparto') {
+        shortNames.add('Reparto');
+      } else if (branch == 'clan' || branch == 'fuoco' || branch == 'clan/fuoco') {
+        shortNames.add('Clan');
+      } else if (branch == 'comunità capi' || branch == 'coca' || branch == 'co.ca.') {
+        shortNames.add('Co.Ca.');
+      }
+    }
+
+    return shortNames.join(', ');
+  }
+
+  /// Gets the color for the branch label chip based on target branches
+  /// Uses the same logic as background color but returns a vibrant version for text
+  Color _getBranchLabelColor(List<String> branches) {
+    if (branches.isEmpty) return Colors.grey;
+
+    final colors = _mapBranchesToColors(branches);
+
+    if (colors.isEmpty) return Colors.grey;
+
+    // Single branch → use that branch's color
+    if (colors.length == 1) {
+      return colors.first;
+    }
+
+    // All 4 branches (Gruppo) → purple
+    final hasBranco = colors.contains(AppColors.brancoYellow);
+    final hasReparto = colors.contains(AppColors.repartoGreen);
+    final hasClan = colors.contains(AppColors.clanRed);
+    final hasCoca = colors.contains(AppColors.cocaPurple);
+
+    if (hasBranco && hasReparto && hasClan && hasCoca) {
+      return AppColors.cocaPurple;
+    }
+
+    // Multiple branches → blend
+    return _blendColors(colors);
   }
 
   Widget? _buildFab() {
     final profile = ref.read(authProvider).profile;
-    final isCapo = profile != null &&
-        (profile['role'] == 'capo' || profile['role'] == 'capo gruppo');
+    if (profile == null) return null;
+
+    final isCapo = profile['role'] == 'capo' || profile['role'] == 'capo gruppo';
 
     // Anche capo squadriglia può creare riunioni di squadriglia
-    final squadRole = profile?['squad_role'] as String?;
+    final squadRole = profile['squad_role'] as String?;
     final canCreate = isCapo || squadRole == 'capo' || squadRole == 'vice';
 
     if (!canCreate) return null;
@@ -690,23 +947,5 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       icon: const Icon(Icons.add),
       label: const Text('Nuova Attività'),
     );
-  }
-
-  /// Calcola il numero massimo di celle necessarie per visualizzare il mese
-  /// Garantisce sempre almeno 6 settimane (42 celle)
-  int _calculateCellCount(DateTime firstDayOfMonth, int daysInMonth) {
-    final firstWeekday = firstDayOfMonth.weekday; // 1=Lun, 7=Dom
-    final leadingBlanks = firstWeekday - 1;
-    final totalCells = leadingBlanks + daysInMonth;
-    // Sempre almeno 6 settimane (42 celle)
-    return totalCells < 42 ? 42 : totalCells;
-  }
-
-  /// Calcola il numero di settimane necessarie per visualizzare il mese
-  /// in base al primo giorno della settimana e ai giorni del mese
-  int _calculateWeeksNeeded(int leadingBlanks, int daysInMonth) {
-    final totalCells = leadingBlanks + daysInMonth;
-    final weeks = (totalCells / 7).ceil();
-    return weeks < 6 ? 6 : weeks;
   }
 }

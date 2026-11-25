@@ -48,6 +48,7 @@ flutter:
   assets:
     - .env
     - shorebird.yaml
+    - assets/images/loghi_ba10/
 
 flutter_launcher_icons:
   android: "launcher_icon"

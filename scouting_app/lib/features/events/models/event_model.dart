@@ -10,7 +10,7 @@ class EventModel {
   final List<String> targetBranches;
   final List<String> targetSquads;
   final List<String> targetUsers;
-  final List<String> logisticsUsers; // ADDED per Logistica
+  final List<String> logisticsUserIds; // Gestito separatamente via event_logistics_members
   final String eventType;
   final double? fee;
   final bool hasGroups;
@@ -29,7 +29,7 @@ class EventModel {
     required this.targetBranches,
     required this.targetSquads,
     required this.targetUsers,
-    this.logisticsUsers = const [],
+    this.logisticsUserIds = const [],
     this.eventType = 'Riunione',
     this.fee,
     this.hasGroups = false,
@@ -50,7 +50,7 @@ class EventModel {
       targetBranches: List<String>.from(json['target_branches'] ?? []),
       targetSquads: List<String>.from(json['target_squads'] ?? []),
       targetUsers: List<String>.from(json['target_users'] ?? []),
-      logisticsUsers: List<String>.from(json['logistics_users'] ?? []),
+      logisticsUserIds: List<String>.from(json['logistics_user_ids'] ?? []),
       eventType: json['event_type'] as String? ?? 'Riunione',
       fee: json['fee'] != null ? double.tryParse(json['fee'].toString()) : null,
       hasGroups: json['has_groups'] as bool? ?? false,
@@ -72,11 +72,54 @@ class EventModel {
       'target_branches': targetBranches,
       'target_squads': targetSquads,
       'target_users': targetUsers,
-      'logistics_users': logisticsUsers,
       'event_type': eventType,
       'fee': fee,
       'has_groups': hasGroups,
       'groups_data': groupsData,
     };
   }
+
+  /// Factory method to create event with logistics user IDs already loaded
+  factory EventModel.withLogistics({
+    required String id,
+    required String title,
+    String? description,
+    required DateTime startDate,
+    required DateTime endDate,
+    String? location,
+    required String createdBy,
+    required List<String> targetRoles,
+    required List<String> targetBranches,
+    required List<String> targetSquads,
+    required List<String> targetUsers,
+    List<String> logisticsUserIds = const [],
+    String eventType = 'Riunione',
+    double? fee,
+    bool hasGroups = false,
+    List<Map<String, dynamic>> groupsData = const [],
+    required DateTime createdAt,
+  }) {
+    return EventModel(
+      id: id,
+      title: title,
+      description: description,
+      startDate: startDate,
+      endDate: endDate,
+      location: location,
+      createdBy: createdBy,
+      targetRoles: targetRoles,
+      targetBranches: targetBranches,
+      targetSquads: targetSquads,
+      targetUsers: targetUsers,
+      logisticsUserIds: logisticsUserIds,
+      eventType: eventType,
+      fee: fee,
+      hasGroups: hasGroups,
+      groupsData: groupsData,
+      createdAt: createdAt,
+    );
+  }
+
+  /// Check if a user is a logistics member for this event
+  bool isLogisticsMember(String userId) => logisticsUserIds.contains(userId);
 }

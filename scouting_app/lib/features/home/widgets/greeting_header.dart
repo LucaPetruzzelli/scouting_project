@@ -8,7 +8,6 @@ class GreetingHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final nome = profile?['nome'] ?? 'Scout';
-    final cognome = profile?['cognome'] ?? '';
     final role = profile?['role'] ?? 'socio';
     final branch = profile?['branch'] ?? 'Non assegnata';
     final jungleName = profile?['jungle_name'] as String?;
@@ -72,64 +71,6 @@ class GreetingHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-
-        // Barra Orizzontale Riepilogo Utente
-        InkWell(
-          onTap: () {},
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  child: Text(
-                    displayName.isNotEmpty ? displayName[0].toUpperCase() : 'S',
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Se è capo branco con soprannome: mostra soprannome + nome reale sotto
-                      if (isCapoBranco && jungleName != null && jungleName.isNotEmpty) ...[
-                        Text(
-                          jungleName,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                        ),
-                        Text(
-                          '$nome $cognome',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ] else ...[
-                        Text(
-                          '$nome $cognome',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                        ),
-                      ],
-                      Text(
-                        '${role.toString().toUpperCase()} • ${branch.toString().toUpperCase()}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
       ],
     );
   }

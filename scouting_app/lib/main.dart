@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/app_colors.dart';
 import 'core/router/app_router.dart';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -9,10 +10,11 @@ import 'package:firebase_core/firebase_core.dart';
 import 'core/theme/theme_provider.dart';
 import 'core/services/push_notification_service.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:flutter/services.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Inizializza le variabili d'ambiente
   await dotenv.load(fileName: ".env");
 
@@ -39,7 +41,21 @@ class ScoutingApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeProvider);
     final router = ref.watch(routerProvider);
-    
+
+    // Imposta lo stile della system UI (status bar) in base al tema
+    final isDark = themeMode == ThemeMode.dark ||
+        (themeMode == ThemeMode.system && MediaQuery.of(context).platformBrightness == Brightness.dark);
+
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+        systemNavigationBarColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+        systemNavigationBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+      ),
+    );
+
     return MaterialApp.router(
       title: 'Scouting',
       theme: AppTheme.lightTheme,

@@ -6,6 +6,20 @@ import '../../../core/widgets/custom_button.dart';
 import '../providers/auth_provider.dart';
 import '../../../core/theme/theme_provider.dart';
 
+double _calculateWelcomeFontSize(double maxWidth) {
+  // Font size per "Benvenuto" che si adatta dinamicamente
+  final minWidth = 320.0;
+  final maxWidthLimit = 800.0;
+
+  final minFontSize = 18.0;
+  final maxFontSize = 24.0;
+
+  final normalizedWidth = ((maxWidth - minWidth) / (maxWidthLimit - minWidth)).clamp(0.0, 1.0);
+  final fontSize = minFontSize + (maxFontSize - minFontSize) * normalizedWidth;
+
+  return fontSize;
+}
+
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -84,11 +98,47 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Center(
-                    child: Text('AGESCI Bari 10', style: Theme.of(context).textTheme.displayLarge),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final maxWidth = constraints.maxWidth;
+                        // Calcola la dimensione del logo in base alla larghezza disponibile
+                        final logoSize = (maxWidth * 0.4).clamp(100.0, 200.0);
+                        return Image.asset(
+                          isDarkMode
+                              ? 'assets/images/loghi_ba10/BARI10_Bianco_HiRes.png'
+                              : 'assets/images/loghi_ba10/BARI10_Nero_HiRes.png',
+                          width: logoSize,
+                          height: logoSize,
+                          errorBuilder: (context, error, stackTrace) {
+                            // Fallback in caso l'immagine non esiste
+                            return Container(
+                              width: logoSize,
+                              height: logoSize,
+                              color: Colors.grey,
+                              child: const Icon(Icons.image_not_supported, size: 40),
+                            );
+                          },
+                        );
+                      },
+                    ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 16),
                   Center(
-                    child: Text('Benvenuto!', style: Theme.of(context).textTheme.headlineMedium),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final maxWidth = constraints.maxWidth;
+                        final fontSize = _calculateWelcomeFontSize(maxWidth);
+                        return Text(
+                          'Benvenuto',
+                          style: TextStyle(
+                            fontSize: fontSize,
+                            fontWeight: FontWeight.w500,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                          textAlign: TextAlign.center,
+                        );
+                      },
+                    ),
                   ),
                   const SizedBox(height: 32),
                   

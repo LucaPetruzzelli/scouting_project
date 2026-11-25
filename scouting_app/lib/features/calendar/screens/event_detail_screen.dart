@@ -6,6 +6,7 @@ import '../../events/models/event_model.dart';
 import '../../events/providers/events_provider.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../events/providers/event_payments_provider.dart';
+import '../../../core/theme/app_colors.dart';
 
 class EventDetailScreen extends ConsumerStatefulWidget {
   final EventModel event;
@@ -37,6 +38,153 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     super.dispose();
   }
 
+  /// Gets the background color for an event based on target branches
+  /// Rules:
+  /// - Pure yellow for branco-only
+  /// - Pure green for reparto-only
+  /// - Pure red for clan-only (or fuoco)
+  /// - Pure purple for comunità capi-only (or coca) OR for "gruppo" (all 4 branches)
+  /// - Blended colors for multi-branch events that don't include all 4 branches
+  Color _getBranchBackgroundColor(List<String> targetBranches) {
+    if (targetBranches.isEmpty) {
+      return Theme.of(context).colorScheme.surface;
+    }
+
+    final colors = _mapBranchesToColors(targetBranches);
+
+    // Se non ci sono colori riconosciuti, restituisci superficie
+    if (colors.isEmpty) {
+      return Theme.of(context).colorScheme.surface;
+    }
+
+    // Se c'è un solo colore, restituiscilo puro
+    if (colors.length == 1) {
+      return colors.first;
+    }
+
+    // Verifica se abbiamo tutte e 4 le branche (branco, reparto, clan, comunità capi)
+    final hasBranco = colors.contains(AppColors.brancoYellow);
+    final hasReparto = colors.contains(AppColors.repartoGreen);
+    final hasClan = colors.contains(AppColors.clanRed);
+    final hasCoca = colors.contains(AppColors.cocaPurple);
+
+    // Se ci sono tutte e 4 le branche (gruppo completo), restituisci viola puro
+    if (hasBranco && hasReparto && hasClan && hasCoca) {
+      return AppColors.cocaPurple;
+    }
+
+    // Altrimenti, blend dei colori presenti
+    return _blendColors(colors);
+  }
+
+  /// Maps branch names to their corresponding colors
+  List<Color> _mapBranchesToColors(List<String> branches) {
+    final colors = <Color>[];
+    final normalizedBranches = branches.map((b) => b.toLowerCase().trim()).toList();
+
+    for (final branch in normalizedBranches) {
+      if (branch == 'branco') {
+        colors.add(AppColors.brancoYellow);
+      } else if (branch == 'reparto') {
+        colors.add(AppColors.repartoGreen);
+      } else if (branch == 'clan' || branch == 'fuoco' || branch == 'clan/fuoco') {
+        colors.add(AppColors.clanRed);
+      } else if (branch == 'comunità capi' || branch == 'coca' || branch == 'co.ca.') {
+        colors.add(AppColors.cocaPurple);
+      }
+      // Nota: 'gruppo' non viene mappato qui - viene gestito in _getBranchBackgroundColor
+      // controllando se tutte e 4 le branche sono presenti
+    }
+
+    return colors;
+  }
+
+  /// Blends multiple colors together by averaging their RGB components
+  Color _blendColors(List<Color> colors) {
+    if (colors.isEmpty) {
+      return Theme.of(context).colorScheme.surface;
+    }
+
+    int r = 0, g = 0, b = 0;
+
+    for (final color in colors) {
+      r += color.r.toInt();
+      g += color.g.toInt();
+      b += color.b.toInt();
+    }
+
+    final count = colors.length;
+    return Color.fromARGB(
+      255,
+      r ~/ count,
+      g ~/ count,
+      b ~/ count,
+    );
+  }
+
+  /// Formats branch names for display in event tiles
+  /// - All 4 branches → "Gruppo"
+  /// - Single branch → short name (e.g., "Co.Ca.", "Branco")
+  /// - Multiple branches → comma-separated short names
+  String _formatBranchLabel(List<String> branches) {
+    if (branches.isEmpty) return 'Evento';
+
+    final normalized = branches.map((b) => b.toLowerCase().trim()).toList();
+
+    // Check if all 4 branches are present (Gruppo)
+    final hasBranco = normalized.contains('branco');
+    final hasReparto = normalized.contains('reparto');
+    final hasClan = normalized.contains('clan') || normalized.contains('fuoco') || normalized.contains('clan/fuoco');
+    final hasCoca = normalized.contains('comunità capi') || normalized.contains('coca') || normalized.contains('co.ca.');
+
+    if (hasBranco && hasReparto && hasClan && hasCoca) {
+      return 'Gruppo';
+    }
+
+    // Map to short display names
+    final shortNames = <String>[];
+    for (final branch in normalized) {
+      if (branch == 'branco') {
+        shortNames.add('Branco');
+      } else if (branch == 'reparto') {
+        shortNames.add('Reparto');
+      } else if (branch == 'clan' || branch == 'fuoco' || branch == 'clan/fuoco') {
+        shortNames.add('Clan');
+      } else if (branch == 'comunità capi' || branch == 'coca' || branch == 'co.ca.') {
+        shortNames.add('Co.Ca.');
+      }
+    }
+
+    return shortNames.join(', ');
+  }
+
+  /// Gets the color for the branch label chip based on target branches
+  Color _getBranchLabelColor(List<String> branches) {
+    if (branches.isEmpty) return Colors.grey;
+
+    final colors = _mapBranchesToColors(branches);
+
+    if (colors.isEmpty) return Colors.grey;
+
+    // Single branch → use that branch's color
+    if (colors.length == 1) {
+      return colors.first;
+    }
+
+    // All 4 branches (Gruppo) → purple
+    final hasBranco = colors.contains(AppColors.brancoYellow);
+    final hasReparto = colors.contains(AppColors.repartoGreen);
+    final hasClan = colors.contains(AppColors.clanRed);
+    final hasCoca = colors.contains(AppColors.cocaPurple);
+
+    if (hasBranco && hasReparto && hasClan && hasCoca) {
+      return AppColors.cocaPurple;
+    }
+
+    // Multiple branches → blend
+    return _blendColors(colors);
+  }
+
   @override
   Widget build(BuildContext context) {
     final profile = ref.watch(authProvider).profile;
@@ -44,7 +192,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     final isCapo = role == 'capo' || role == 'capo gruppo';
     final isCreator = profile != null && widget.event.createdBy == profile['id'];
 
-    final color = _eventTypeColor(widget.event.eventType);
+    final branchBackgroundColor = _getBranchBackgroundColor(widget.event.targetBranches);
 
     return Scaffold(
       body: NestedScrollView(
@@ -76,7 +224,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
                       );
                       if (confirm == true && mounted) {
                         await ref.read(eventsProvider.notifier).deleteEvent(widget.event.id);
-                        if (mounted) context.pop();
+                        if (mounted && context.mounted) context.pop();
                       }
                     }
                   },
@@ -106,7 +254,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
               background: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [color, color.withValues(alpha: 0.7)],
+                    colors: [branchBackgroundColor, branchBackgroundColor.withValues(alpha: 0.7)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -159,11 +307,14 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     final isAdult = profile?['is_adult'] == true;
     final canConfirm = isAdult || role == 'socio'; // tutti i soci maggiorenni possono confermare
 
+    final branchLabel = _formatBranchLabel(e.targetBranches);
+    final branchColor = _getBranchLabelColor(e.targetBranches);
+
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        // Tipo di evento
-        _infoChip(e.eventType, _eventTypeColor(e.eventType)),
+        // Branche destinatarie (invece del tipo evento)
+        _infoChip(branchLabel, branchColor),
 
         const SizedBox(height: 16),
 
@@ -232,7 +383,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
         // Pulsante gestione logistica (solo capi)
         // Solo i capi possono aggiungere/rimuovere membri del gruppo logistica
         if (profile != null && (profile['role'] == 'capo' || profile['role'] == 'capo gruppo')) ...[
-          if (e.logisticsUsers.isNotEmpty || profile['role'] == 'capo' || profile['role'] == 'capo gruppo')
+          if (e.logisticsUserIds.isNotEmpty || profile['role'] == 'capo' || profile['role'] == 'capo gruppo')
             OutlinedButton.icon(
               icon: const Icon(Icons.local_shipping, size: 20),
               label: const Text('Gestisci Logistica'),
@@ -247,7 +398,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
           if (profile != null &&
               (profile['role'] == 'capo' ||
                   profile['role'] == 'capo gruppo' ||
-                  (e.logisticsUsers.contains(profile['id'])))) ...[
+                  (e.isLogisticsMember(profile['id'])))) ...[
             ElevatedButton.icon(
               icon: const Icon(Icons.euro),
               label: const Text('Gestisci Quote'),
@@ -405,15 +556,26 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withValues(alpha: 0.3)),
+          color: color,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.35),
+              blurRadius: 6,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: Text(
           label,
-          style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 13),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+            fontSize: 14,
+            letterSpacing: 0.3,
+          ),
         ),
       ),
     );
@@ -444,15 +606,6 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
         Text(label, style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 12)),
       ],
     );
-  }
-
-  Color _eventTypeColor(String type) {
-    switch (type) {
-      case 'Riunione': return Colors.blue;
-      case 'Uscita': return Colors.green;
-      case 'Campo': return Colors.orange;
-      default: return Colors.purple;
-    }
   }
 
   IconData _eventTypeIcon(String type) {

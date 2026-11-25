@@ -48,11 +48,11 @@ class EventsListScreen extends ConsumerWidget {
                           builder: (context) {
                             final role = profile['role'];
                             final isCapo = role == 'capo' || role == 'capo gruppo';
-                            final isLogistica = event.logisticsUsers.contains(profile['id']);
+                            final isLogistica = event.isLogisticsMember(profile['id']);
 
                             final List<Widget> buttons = [];
 
-                            if (event.logisticsUsers.isNotEmpty) {
+                            if (event.logisticsUserIds.isNotEmpty) {
                               buttons.add(
                                 Expanded(
                                   child: OutlinedButton.icon(

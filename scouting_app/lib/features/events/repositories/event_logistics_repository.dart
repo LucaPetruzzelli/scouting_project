@@ -26,6 +26,21 @@ class EventLogisticsRepository {
     }
   }
 
+  /// Gets only the user IDs of logistics members for a specific event
+  Future<List<String>> getLogisticsUserIds(String eventId) async {
+    try {
+      final response = await _supabase
+          .from('event_logistics_members')
+          .select('user_id')
+          .eq('event_id', eventId);
+
+      return List<String>.from(response.map((e) => e['user_id'] as String));
+    } catch (e) {
+      debugPrint('Errore getLogisticsUserIds: $e');
+      return [];
+    }
+  }
+
   /// Gets expected participants for an event (users matching event targets)
   Future<List<Map<String, dynamic>>> getExpectedParticipants(
     List<String> branches,
