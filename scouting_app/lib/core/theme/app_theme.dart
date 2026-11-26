@@ -1,5 +1,6 @@
 // lib/core/theme/app_theme.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
@@ -44,6 +45,13 @@ class AppTheme {
         scrolledUnderElevation: 2,
         backgroundColor: scaffoldBg,
         foregroundColor: colorScheme.onSurface,
+        systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: colorScheme.brightness == Brightness.dark
+              ? Brightness.light
+              : Brightness.dark,
+          statusBarBrightness: colorScheme.brightness,
+        ),
         titleTextStyle: baseTextTheme.titleLarge?.copyWith(
           fontWeight: FontWeight.w700,
           color: colorScheme.onSurface,

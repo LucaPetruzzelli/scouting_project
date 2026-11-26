@@ -19,23 +19,27 @@ class EventDetailScreen extends ConsumerStatefulWidget {
 
 class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-
-  @override
-  void initState() {
-    super.initState();
-    final profile = ref.read(authProvider).profile;
-    final isCapo = profile != null &&
-        (profile['role'] == 'capo' || profile['role'] == 'capo gruppo');
-    // Tab: Dettagli sempre visibile; Presenze e Quote solo per capi
-    final tabCount = isCapo ? 3 : 1;
-    _tabController = TabController(length: tabCount, vsync: this);
-  }
+  TabController? _tabController;
+  int? _lastTabCount;
+  bool? _lastIsCapo;
 
   @override
   void dispose() {
-    _tabController.dispose();
+    _tabController?.dispose();
     super.dispose();
+  }
+
+  TabController _getTabController(bool isCapo, bool hasFee) {
+    final tabCount = isCapo ? (hasFee ? 3 : 2) : 1;
+
+    // Recreate controller if tab count or isCapo changed
+    if (_tabController == null || _lastTabCount != tabCount || _lastIsCapo != isCapo) {
+      _tabController?.dispose();
+      _tabController = TabController(length: tabCount, vsync: this);
+      _lastTabCount = tabCount;
+      _lastIsCapo = isCapo;
+    }
+    return _tabController!;
   }
 
   /// Gets the background color for an event based on target branches
@@ -193,113 +197,132 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     final isCreator = profile != null && widget.event.createdBy == profile['id'];
 
     final branchBackgroundColor = _getBranchBackgroundColor(widget.event.targetBranches);
+    final hasFee = widget.event.fee != null;
+
+    // Per i capi: se c'è una quota mostriamo 3 tab, altrimenti 2 (Dettagli + Presenze)
+    // Per i soci: sempre solo Dettagli
+    final tabController = _getTabController(isCapo, hasFee);
+
+    final tabs = isCapo
+        ? [
+            const Tab(text: 'Dettagli'),
+            const Tab(text: 'Presenze'),
+            if (hasFee) const Tab(text: 'Quote'),
+          ]
+        : <Tab>[];
 
     return Scaffold(
       body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) => [
-          SliverAppBar(
-            expandedHeight: 180,
-            pinned: true,
-            actions: [
-              if (isCapo || isCreator)
-                PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert, color: Colors.white),
-                  onSelected: (value) async {
-                    if (value == 'edit') {
-                      context.push('/events/edit', extra: widget.event);
-                    } else if (value == 'delete') {
-                      final confirm = await showDialog<bool>(
-                        context: context,
-                        builder: (ctx) => AlertDialog(
-                          title: const Text('Elimina evento'),
-                          content: const Text('Sei sicuro di voler eliminare questo evento?'),
-                          actions: [
-                            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annulla')),
-                            TextButton(
-                              onPressed: () => Navigator.pop(ctx, true),
-                              child: const Text('Elimina', style: TextStyle(color: Colors.red)),
-                            ),
-                          ],
-                        ),
-                      );
-                      if (confirm == true && mounted) {
-                        await ref.read(eventsProvider.notifier).deleteEvent(widget.event.id);
-                        if (mounted && context.mounted) context.pop();
+          SliverOverlapAbsorber(
+            handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+            sliver: SliverAppBar(
+              expandedHeight: 100,
+              pinned: true,
+              forceElevated: innerBoxIsScrolled,
+              flexibleSpace: FlexibleSpaceBar(
+                title: Text(
+                  widget.event.title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    shadows: [Shadow(color: Colors.black45, blurRadius: 4)],
+                  ),
+                ),
+                background: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [branchBackgroundColor, branchBackgroundColor.withValues(alpha: 0.7)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      _eventTypeIcon(widget.event.eventType),
+                      size: 80,
+                      color: Colors.white.withValues(alpha: 0.2),
+                    ),
+                  ),
+                ),
+              ),
+              actions: [
+                if (isCapo || isCreator)
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert, color: Colors.white),
+                    onSelected: (value) async {
+                      if (value == 'edit') {
+                        context.push('/events/edit', extra: widget.event);
+                      } else if (value == 'delete') {
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: const Text('Elimina evento'),
+                            content: const Text('Sei sicuro di voler eliminare questo evento?'),
+                            actions: [
+                              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annulla')),
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx, true),
+                                child: const Text('Elimina', style: TextStyle(color: Colors.red)),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirm == true && mounted) {
+                          await ref.read(eventsProvider.notifier).deleteEvent(widget.event.id);
+                          if (mounted && context.mounted) context.pop();
+                        }
                       }
-                    }
-                  },
-                  itemBuilder: (_) => [
-                    if (isCapo || isCreator)
-                      const PopupMenuItem(value: 'edit', child: ListTile(leading: Icon(Icons.edit), title: Text('Modifica'))),
-                    if (isCapo || isCreator)
-                      const PopupMenuItem(
-                        value: 'delete',
-                        child: ListTile(
-                          leading: Icon(Icons.delete, color: Colors.red),
-                          title: Text('Elimina', style: TextStyle(color: Colors.red)),
+                    },
+                    itemBuilder: (_) => [
+                      if (isCapo || isCreator)
+                        const PopupMenuItem(value: 'edit', child: ListTile(leading: Icon(Icons.edit), title: Text('Modifica'))),
+                      if (isCapo || isCreator)
+                        const PopupMenuItem(
+                          value: 'delete',
+                          child: ListTile(
+                            leading: Icon(Icons.delete, color: Colors.red),
+                            title: Text('Elimina', style: TextStyle(color: Colors.red)),
+                          ),
+                        ),
+                    ],
+                  ),
+              ],
+              bottom: isCapo
+                  ? PreferredSize(
+                      preferredSize: const Size.fromHeight(48.0),
+                      child: ColoredBox(
+                        color: branchBackgroundColor,
+                        child: TabBar(
+                          controller: tabController,
+                          labelColor: Colors.white,
+                          unselectedLabelColor: Colors.white70,
+                          indicatorColor: Colors.white,
+                          tabs: tabs,
                         ),
                       ),
-                  ],
-                ),
-            ],
-            flexibleSpace: FlexibleSpaceBar(
-              title: Text(
-                widget.event.title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  shadows: [Shadow(color: Colors.black45, blurRadius: 4)],
-                ),
-              ),
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [branchBackgroundColor, branchBackgroundColor.withValues(alpha: 0.7)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                child: Center(
-                  child: Icon(
-                    _eventTypeIcon(widget.event.eventType),
-                    size: 80,
-                    color: Colors.white.withValues(alpha: 0.2),
-                  ),
-                ),
-              ),
+                    )
+                  : null,
             ),
-            bottom: isCapo
-                ? TabBar(
-                    controller: _tabController,
-                    labelColor: Colors.white,
-                    unselectedLabelColor: Colors.white70,
-                    indicatorColor: Colors.white,
-                    tabs: const [
-                      Tab(text: 'Dettagli'),
-                      Tab(text: 'Presenze'),
-                      Tab(text: 'Quote'),
-                    ],
-                  )
-                : null,
           ),
         ],
         body: isCapo
             ? TabBarView(
-                controller: _tabController,
+                controller: tabController,
                 children: [
-                  _buildDetailsTab(profile),
-                  _buildAttendanceTab(profile),
-                  _buildPaymentsTab(profile),
+                  _buildDetailsTab(context, profile),
+                  _buildAttendanceTab(context, profile),
+                  if (hasFee) _buildPaymentsTab(context, profile),
                 ],
               )
-            : _buildDetailsTab(profile),
+            : _buildDetailsTab(context, profile),
       ),
     );
   }
 
   // ─── TAB DETTAGLI ────────────────────────────────────────────────────────────
 
-  Widget _buildDetailsTab(Map<String, dynamic>? profile) {
+  Widget _buildDetailsTab(BuildContext context, Map<String, dynamic>? profile) {
     final e = widget.event;
     final dateFormat = DateFormat('EEEE d MMMM yyyy', 'it_IT');
     final timeFormat = DateFormat('HH:mm');
@@ -310,220 +333,285 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen>
     final branchLabel = _formatBranchLabel(e.targetBranches);
     final branchColor = _getBranchLabelColor(e.targetBranches);
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        // Branche destinatarie (invece del tipo evento)
-        _infoChip(branchLabel, branchColor),
-
-        const SizedBox(height: 16),
-
-        // Date e orari
-        _infoCard(
-          icon: Icons.calendar_today,
-          title: 'Data e orario',
-          content: '${dateFormat.format(e.startDate)}\n${timeFormat.format(e.startDate)} – ${timeFormat.format(e.endDate)}',
-        ),
-
-        // Luogo
-        if (e.location != null && e.location!.isNotEmpty)
-          _infoCard(
-            icon: Icons.location_on,
-            title: 'Luogo',
-            content: e.location!,
+    return Builder(
+      builder: (context) => CustomScrollView(
+        key: const PageStorageKey('details'),
+        slivers: [
+          SliverOverlapInjector(
+            handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
           ),
+          SliverPadding(
+            padding: const EdgeInsets.all(16),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                // Branche destinatarie (invece del tipo evento)
+                _infoChip(branchLabel, branchColor),
 
-        // Descrizione
-        if (e.description != null && e.description!.isNotEmpty)
-          _infoCard(
-            icon: Icons.description,
-            title: 'Descrizione',
-            content: e.description!,
+                const SizedBox(height: 16),
+
+                // Date e orari
+                _infoCard(
+                  icon: Icons.calendar_today,
+                  title: 'Data e orario',
+                  content: '${dateFormat.format(e.startDate)}\n${timeFormat.format(e.startDate)} – ${timeFormat.format(e.endDate)}',
+                ),
+
+                // Luogo
+                if (e.location != null && e.location!.isNotEmpty)
+                  _infoCard(
+                    icon: Icons.location_on,
+                    title: 'Luogo',
+                    content: e.location!,
+                  ),
+
+                // Descrizione
+                if (e.description != null && e.description!.isNotEmpty)
+                  _infoCard(
+                    icon: Icons.description,
+                    title: 'Descrizione',
+                    content: e.description!,
+                  ),
+
+                // Quota
+                if (e.fee != null)
+                  _infoCard(
+                    icon: Icons.euro,
+                    title: 'Quota di partecipazione',
+                    content: '€ ${e.fee!.toStringAsFixed(2)}',
+                    contentColor: Colors.green,
+                  )
+                else
+                  _infoCard(
+                    icon: Icons.euro,
+                    title: 'Quota di partecipazione',
+                    content: 'Questo evento non prevede una quota',
+                    contentColor: Colors.grey,
+                  ),
+
+                // Target (solo capi)
+                if (profile != null && (profile['role'] == 'capo' || profile['role'] == 'capo gruppo')) ...[
+                  if (e.targetBranches.isNotEmpty)
+                    _infoCard(
+                      icon: Icons.groups,
+                      title: 'Branche destinatarie',
+                      content: e.targetBranches.join(', '),
+                    ),
+                  if (e.targetRoles.isNotEmpty)
+                    _infoCard(
+                      icon: Icons.badge,
+                      title: 'Ruoli destinatari',
+                      content: e.targetRoles.join(', '),
+                    ),
+                ],
+
+                const SizedBox(height: 20),
+
+                // Pulsante conferma presenza (soci maggiorenni)
+                if (canConfirm) ...[
+                  const Text(
+                    'La tua partecipazione',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  const SizedBox(height: 10),
+                  _AttendanceConfirmationWidget(event: widget.event, profile: profile),
+                ],
+
+                const SizedBox(height: 20),
+
+                // Pulsante gestione logistica (solo capi)
+                // Solo i capi possono aggiungere/rimuovere membri del gruppo logistica
+                if (profile != null && (profile['role'] == 'capo' || profile['role'] == 'capo gruppo')) ...[
+                  if (e.logisticsUserIds.isNotEmpty || profile['role'] == 'capo' || profile['role'] == 'capo gruppo')
+                    OutlinedButton.icon(
+                      icon: const Icon(Icons.local_shipping, size: 20),
+                      label: const Text('Gestisci Logistica'),
+                      onPressed: () => context.push('/events/logistics', extra: e),
+                    ),
+                ],
+
+                const SizedBox(height: 20),
+
+                // Pulsante gestione quote (se prevede quota ed è capo/logistica)
+                if (e.fee != null) ...[
+                  if (profile != null &&
+                      (profile['role'] == 'capo' ||
+                          profile['role'] == 'capo gruppo' ||
+                          (e.isLogisticsMember(profile['id'])))) ...[
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.euro),
+                      label: const Text('Gestisci Quote'),
+                      onPressed: () => context.push('/events/payments', extra: e),
+                    ),
+                  ] else ...[
+                    // Socio: mostra solo il suo stato pagamento
+                    _SocioPaymentStatusWidget(event: widget.event, profile: profile),
+                  ],
+                ],
+              ]),
+            ),
           ),
-
-        // Quota
-        if (e.fee != null)
-          _infoCard(
-            icon: Icons.euro,
-            title: 'Quota di partecipazione',
-            content: '€ ${e.fee!.toStringAsFixed(2)}',
-            contentColor: Colors.green,
-          ),
-
-        // Target (solo capi)
-        if (profile != null && (profile['role'] == 'capo' || profile['role'] == 'capo gruppo')) ...[
-          if (e.targetBranches.isNotEmpty)
-            _infoCard(
-              icon: Icons.groups,
-              title: 'Branche destinatarie',
-              content: e.targetBranches.join(', '),
-            ),
-          if (e.targetRoles.isNotEmpty)
-            _infoCard(
-              icon: Icons.badge,
-              title: 'Ruoli destinatari',
-              content: e.targetRoles.join(', '),
-            ),
         ],
-
-        const SizedBox(height: 20),
-
-        // Pulsante conferma presenza (soci maggiorenni)
-        if (canConfirm) ...[
-          const Text(
-            'La tua partecipazione',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-          ),
-          const SizedBox(height: 10),
-          _AttendanceConfirmationWidget(event: widget.event, profile: profile),
-        ],
-
-        const SizedBox(height: 20),
-
-        // Pulsante gestione logistica (solo capi)
-        // Solo i capi possono aggiungere/rimuovere membri del gruppo logistica
-        if (profile != null && (profile['role'] == 'capo' || profile['role'] == 'capo gruppo')) ...[
-          if (e.logisticsUserIds.isNotEmpty || profile['role'] == 'capo' || profile['role'] == 'capo gruppo')
-            OutlinedButton.icon(
-              icon: const Icon(Icons.local_shipping, size: 20),
-              label: const Text('Gestisci Logistica'),
-              onPressed: () => context.push('/events/logistics', extra: e),
-            ),
-        ],
-
-        const SizedBox(height: 20),
-
-        // Pulsante gestione quote (se prevede quota ed è capo/logistica)
-        if (e.fee != null) ...[
-          if (profile != null &&
-              (profile['role'] == 'capo' ||
-                  profile['role'] == 'capo gruppo' ||
-                  (e.isLogisticsMember(profile['id'])))) ...[
-            ElevatedButton.icon(
-              icon: const Icon(Icons.euro),
-              label: const Text('Gestisci Quote'),
-              onPressed: () => context.push('/events/payments', extra: e),
-            ),
-          ] else ...[
-            // Socio: mostra solo il suo stato pagamento
-            _SocioPaymentStatusWidget(event: widget.event, profile: profile),
-          ],
-        ],
-      ],
+      ),
     );
   }
 
   // ─── TAB PRESENZE (solo capi) ─────────────────────────────────────────────
 
-  Widget _buildAttendanceTab(Map<String, dynamic>? profile) {
+  Widget _buildAttendanceTab(BuildContext context, Map<String, dynamic>? profile) {
     final paymentsAsync = ref.watch(eventPaymentsProvider(widget.event));
 
     return paymentsAsync.when(
       data: (data) {
         final participants = data['participants'] as List<Map<String, dynamic>>;
         if (participants.isEmpty) {
-          return const Center(child: Text('Nessun partecipante registrato.'));
+          return Builder(
+            builder: (context) => CustomScrollView(
+              slivers: [
+                SliverOverlapInjector(
+                  handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+                ),
+                const SliverFillRemaining(
+                  child: Center(child: Text('Nessun partecipante registrato.')),
+                ),
+              ],
+            ),
+          );
         }
 
         final present = participants.where((p) => p['actual_present'] == true).length;
         final absent = participants.where((p) => p['actual_present'] == false).length;
         final pending = participants.length - present - absent;
 
-        return Column(
-          children: [
-            // Riepilogo presenze
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _statBadge('Presenti', present, Colors.green),
-                  _statBadge('Assenti', absent, Colors.red),
-                  _statBadge('N/D', pending, Colors.grey),
-                ],
+        return Builder(
+          builder: (context) => CustomScrollView(
+            key: const PageStorageKey('attendance'),
+            slivers: [
+              SliverOverlapInjector(
+                handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
               ),
-            ),
-            const Divider(height: 1),
-            Expanded(
-              child: ListView.builder(
-                itemCount: participants.length,
-                itemBuilder: (context, index) {
-                  final p = participants[index];
-                  final nome = '${p['nome'] ?? ''} ${p['cognome'] ?? ''}'.trim();
-                  final isPresent = p['actual_present'];
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _statBadge('Presenti', present, Colors.green),
+                      _statBadge('Assenti', absent, Colors.red),
+                      _statBadge('N/D', pending, Colors.grey),
+                    ],
+                  ),
+                ),
+              ),
+              const SliverToBoxAdapter(child: Divider(height: 1)),
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final p = participants[index];
+                    final nome = '${p['nome'] ?? ''} ${p['cognome'] ?? ''}'.trim();
+                    final isPresent = p['actual_present'];
 
-                  return ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: isPresent == true
-                          ? Colors.green.withValues(alpha: 0.2)
-                          : isPresent == false
-                              ? Colors.red.withValues(alpha: 0.2)
-                              : Colors.grey.withValues(alpha: 0.2),
-                      child: Text(
-                        nome.isNotEmpty ? nome[0].toUpperCase() : '?',
-                        style: TextStyle(
-                          color: isPresent == true
-                              ? Colors.green
-                              : isPresent == false
-                                  ? Colors.red
-                                  : Colors.grey,
+                    return ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: isPresent == true
+                            ? Colors.green.withValues(alpha: 0.2)
+                            : isPresent == false
+                                ? Colors.red.withValues(alpha: 0.2)
+                                : Colors.grey.withValues(alpha: 0.2),
+                        child: Text(
+                          nome.isNotEmpty ? nome[0].toUpperCase() : '?',
+                          style: TextStyle(
+                            color: isPresent == true
+                                ? Colors.green
+                                : isPresent == false
+                                    ? Colors.red
+                                    : Colors.grey,
+                          ),
                         ),
                       ),
-                    ),
-                    title: Text(nome, style: const TextStyle(fontWeight: FontWeight.w600)),
-                    subtitle: Text(p['branch'] ?? ''),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Pulsante presente
-                        IconButton(
-                          icon: Icon(
-                            Icons.check_circle,
-                            color: isPresent == true ? Colors.green : Colors.grey.shade300,
+                      title: Text(nome, style: const TextStyle(fontWeight: FontWeight.w600)),
+                      subtitle: Text(p['branch'] ?? ''),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: Icon(
+                              Icons.check_circle,
+                              color: isPresent == true ? Colors.green : Colors.grey.shade300,
+                            ),
+                            onPressed: () => ref
+                                .read(eventPaymentsProvider(widget.event).notifier)
+                                .markAttendance(p['id'], true),
+                            tooltip: 'Presente',
                           ),
-                          onPressed: () => ref
-                              .read(eventPaymentsProvider(widget.event).notifier)
-                              .markAttendance(p['id'], true),
-                          tooltip: 'Presente',
-                        ),
-                        // Pulsante assente
-                        IconButton(
-                          icon: Icon(
-                            Icons.cancel,
-                            color: isPresent == false ? Colors.red : Colors.grey.shade300,
+                          IconButton(
+                            icon: Icon(
+                              Icons.cancel,
+                              color: isPresent == false ? Colors.red : Colors.grey.shade300,
+                            ),
+                            onPressed: () => ref
+                                .read(eventPaymentsProvider(widget.event).notifier)
+                                .markAttendance(p['id'], false),
+                            tooltip: 'Assente',
                           ),
-                          onPressed: () => ref
-                              .read(eventPaymentsProvider(widget.event).notifier)
-                              .markAttendance(p['id'], false),
-                          tooltip: 'Assente',
-                        ),
-                      ],
-                    ),
-                  );
-                },
+                        ],
+                      ),
+                    );
+                  },
+                  childCount: participants.length,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (err, _) => Center(child: Text('Errore: $err')),
+      loading: () => Builder(
+        builder: (context) => CustomScrollView(
+          slivers: [
+            SliverOverlapInjector(
+              handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+            ),
+            const SliverFillRemaining(
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          ],
+        ),
+      ),
+      error: (err, _) => Builder(
+        builder: (context) => CustomScrollView(
+          slivers: [
+            SliverOverlapInjector(
+              handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+            ),
+            SliverFillRemaining(
+              child: Center(child: Text('Errore: $err')),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
   // ─── TAB QUOTE (solo capi) ────────────────────────────────────────────────
 
-  Widget _buildPaymentsTab(Map<String, dynamic>? profile) {
-    if (widget.event.fee == null) {
-      return const Center(
-        child: Text('Questo evento non prevede una quota.'),
-      );
-    }
-    return Center(
-      child: ElevatedButton.icon(
-        icon: const Icon(Icons.euro),
-        label: const Text('Apri Gestione Quote'),
-        onPressed: () => context.push('/events/payments', extra: widget.event),
+  Widget _buildPaymentsTab(BuildContext context, Map<String, dynamic>? profile) {
+    return Builder(
+      builder: (context) => CustomScrollView(
+        slivers: [
+          SliverOverlapInjector(
+            handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+          ),
+          SliverFillRemaining(
+            child: Center(
+              child: widget.event.fee == null
+                  ? const Text('Questo evento non prevede una quota.')
+                  : ElevatedButton.icon(
+                      icon: const Icon(Icons.euro),
+                      label: const Text('Apri Gestione Quote'),
+                      onPressed: () => context.push('/events/payments', extra: widget.event),
+                    ),
+            ),
+          ),
+        ],
       ),
     );
   }
